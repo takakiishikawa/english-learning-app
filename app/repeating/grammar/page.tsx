@@ -206,18 +206,18 @@ export default function GrammarRepeatingPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-2xl">{current?.name}</CardTitle>
+              <CardTitle className="text-3xl">{current?.name}</CardTitle>
               <StarRating value={current?.frequency ?? 0} />
             </div>
-            <p className="text-muted-foreground whitespace-pre-line">{current?.summary}</p>
+            <p className="text-base text-muted-foreground whitespace-pre-line">{current?.summary}</p>
           </CardHeader>
           <CardContent>
-            <p className="text-sm font-medium mb-3">例文:</p>
+            <p className="text-base font-medium mb-3">例文:</p>
             <ul className="space-y-2">
               {examples.map((ex, i) => (
                 <li
                   key={i}
-                  className={`rounded-lg px-3 py-2 text-sm transition-colors ${
+                  className={`rounded-lg px-3 py-2 text-base transition-colors ${
                     i === currentLine
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted"
@@ -227,7 +227,7 @@ export default function GrammarRepeatingPage() {
                 </li>
               ))}
             </ul>
-            <p className="text-xs text-muted-foreground mt-3">
+            <p className="text-sm text-muted-foreground mt-3">
               場面: {current?.usage_scene}
             </p>
           </CardContent>

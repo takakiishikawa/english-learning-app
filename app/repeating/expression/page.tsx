@@ -209,21 +209,21 @@ export default function ExpressionRepeatingPage() {
             <div className="flex items-center justify-between">
               <div>
                 <Badge variant="outline" className="mb-2">{current?.category}</Badge>
-                <CardTitle className="text-2xl">{current?.expression}</CardTitle>
+                <CardTitle className="text-3xl">{current?.expression}</CardTitle>
               </div>
               <StarRating value={current?.frequency ?? 0} />
             </div>
-            <p className="text-muted-foreground whitespace-pre-line">{current?.meaning}</p>
+            <p className="text-base text-muted-foreground whitespace-pre-line">{current?.meaning}</p>
           </CardHeader>
           <CardContent>
-            <p className="text-sm font-medium mb-3">会話例:</p>
+            <p className="text-base font-medium mb-3">会話例:</p>
             <div className="space-y-2">
               {lines.map((line, i) => {
                 const isA = line.startsWith("A:")
                 return (
                   <div
                     key={i}
-                    className={`rounded-lg px-3 py-2 text-sm transition-colors ${
+                    className={`rounded-lg px-3 py-2 text-base transition-colors ${
                       i === currentLine
                         ? isA
                           ? "bg-blue-600 text-white"
@@ -238,7 +238,7 @@ export default function ExpressionRepeatingPage() {
                 )
               })}
             </div>
-            <p className="text-xs text-muted-foreground mt-3">
+            <p className="text-sm text-muted-foreground mt-3">
               場面: {current?.usage_scene}
             </p>
           </CardContent>

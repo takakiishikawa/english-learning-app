@@ -222,7 +222,7 @@ export default async function HomePage() {
           <Card key={title} className="shadow-sm">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-xs font-medium text-muted-foreground">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
                   {title}
                 </CardTitle>
                 <div className={`rounded-lg p-2 ${bg}`}>
@@ -232,8 +232,8 @@ export default async function HomePage() {
             </CardHeader>
             <CardContent>
               <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-bold">{value}</span>
-                <span className="text-sm text-muted-foreground">{unit}</span>
+                <span className="text-4xl font-bold">{value}</span>
+                <span className="text-base text-muted-foreground">{unit}</span>
               </div>
             </CardContent>
           </Card>
@@ -253,8 +253,8 @@ export default async function HomePage() {
                   <BookOpen className="h-5 w-5 text-indigo-600" />
                 </div>
                 <div>
-                  <p className="font-semibold text-sm text-indigo-900">文法練習</p>
-                  <p className="text-xs text-indigo-600/70">
+                  <p className="font-semibold text-base text-indigo-900">文法練習</p>
+                  <p className="text-sm text-indigo-600/70">
                     {grammars.filter((g) => g.play_count < 10).length} 件 練習中
                   </p>
                 </div>
@@ -269,8 +269,8 @@ export default async function HomePage() {
                   <MessageSquare className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
-                  <p className="font-semibold text-sm text-green-900">フレーズ練習</p>
-                  <p className="text-xs text-green-600/70">
+                  <p className="font-semibold text-base text-green-900">フレーズ練習</p>
+                  <p className="text-sm text-green-600/70">
                     {expressions.filter((e) => e.play_count < 10).length} 件 練習中
                   </p>
                 </div>
@@ -285,7 +285,7 @@ export default async function HomePage() {
       <Card className="shadow-sm">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-semibold">日次練習数（14日間）</CardTitle>
+            <CardTitle className="text-base font-semibold">日次練習数（14日間）</CardTitle>
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
                 <span className="inline-block w-3 h-0.5 bg-indigo-500 rounded" />
