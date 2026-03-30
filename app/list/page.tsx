@@ -21,6 +21,9 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import type { Grammar, Expression } from "@/lib/types"
+
+type GrammarWithLesson = Grammar & { lessons: { lesson_no: string } | null }
+type ExpressionWithLesson = Expression & { lessons: { lesson_no: string } | null }
 import { Star } from "lucide-react"
 
 function StarRating({ value }: { value: number }) {
@@ -38,21 +41,19 @@ function StarRating({ value }: { value: number }) {
 
 function GrammarTab() {
   const supabase = createClient()
-  const [items, setItems] = useState<Grammar[]>([])
-  const [lessonMap, setLessonMap] = useState<Map<string, string>>(new Map())
+  const [items, setItems] = useState<GrammarWithLesson[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<"all" | "try" | "done">("all")
   const [freqFilter, setFreqFilter] = useState<"all" | "3" | "4" | "5">("all")
-  const [selected, setSelected] = useState<Grammar | null>(null)
+  const [selected, setSelected] = useState<GrammarWithLesson | null>(null)
 
   useEffect(() => {
     async function load() {
-      const [dataRes, lessonsRes] = await Promise.all([
-        supabase.from("grammar").select("*").order("created_at", { ascending: false }),
-        supabase.from("lessons").select("id, lesson_no"),
-      ])
-      setItems(dataRes.data ?? [])
-      setLessonMap(new Map((lessonsRes.data ?? []).map((l) => [l.id, l.lesson_no])))
+      const { data } = await supabase
+        .from("grammar")
+        .select("*, lessons(lesson_no)")
+        .order("created_at", { ascending: false })
+      setItems((data ?? []) as GrammarWithLesson[])
       setLoading(false)
     }
     load()
@@ -115,7 +116,7 @@ function GrammarTab() {
               onClick={() => setSelected(item)}
             >
               <TableCell className="font-mono text-xs text-muted-foreground">
-                {item.lesson_id ? (lessonMap.get(item.lesson_id) ?? item.lesson_id.slice(0, 6)) : "—"}
+                {item.lessons?.lesson_no ?? "—"}
               </TableCell>
               <TableCell className="font-medium">{item.name}</TableCell>
               <TableCell className="text-muted-foreground text-sm max-w-xs truncate">{item.summary.split("\n")[0]}{item.summary.includes("\n") ? "..." : ""}</TableCell>
@@ -156,21 +157,19 @@ function GrammarTab() {
 
 function PhraseTab() {
   const supabase = createClient()
-  const [items, setItems] = useState<Expression[]>([])
-  const [lessonMap, setLessonMap] = useState<Map<string, string>>(new Map())
+  const [items, setItems] = useState<ExpressionWithLesson[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<"all" | "try" | "done">("all")
   const [freqFilter, setFreqFilter] = useState<"all" | "3" | "4" | "5">("all")
-  const [selected, setSelected] = useState<Expression | null>(null)
+  const [selected, setSelected] = useState<ExpressionWithLesson | null>(null)
 
   useEffect(() => {
     async function load() {
-      const [dataRes, lessonsRes] = await Promise.all([
-        supabase.from("expressions").select("*").order("created_at", { ascending: false }),
-        supabase.from("lessons").select("id, lesson_no"),
-      ])
-      setItems(dataRes.data ?? [])
-      setLessonMap(new Map((lessonsRes.data ?? []).map((l) => [l.id, l.lesson_no])))
+      const { data } = await supabase
+        .from("expressions")
+        .select("*, lessons(lesson_no)")
+        .order("created_at", { ascending: false })
+      setItems((data ?? []) as ExpressionWithLesson[])
       setLoading(false)
     }
     load()
@@ -234,7 +233,7 @@ function PhraseTab() {
               onClick={() => setSelected(item)}
             >
               <TableCell className="font-mono text-xs text-muted-foreground">
-                {item.lesson_id ? (lessonMap.get(item.lesson_id) ?? item.lesson_id.slice(0, 6)) : "—"}
+                {item.lessons?.lesson_no ?? "—"}
               </TableCell>
               <TableCell><Badge variant="outline" className="text-xs">{item.category}</Badge></TableCell>
               <TableCell className="font-medium">{item.expression}</TableCell>

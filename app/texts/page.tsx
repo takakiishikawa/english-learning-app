@@ -17,7 +17,6 @@ import { Loader2, Star, BookOpen, MessageSquare, Plus } from "lucide-react"
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 type LessonStats = { total: number; done: number; started: number }
-type LessonStatus = "未登録" | "登録済み" | "練習中" | "完了"
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -38,29 +37,13 @@ function sortLessons(lessons: Lesson[]): Lesson[] {
   })
 }
 
-function computeStatus(
-  lessonId: string,
-  grammarMap: Map<string, LessonStats>,
-  expressionMap: Map<string, LessonStats>
-): LessonStatus {
-  const g = grammarMap.get(lessonId) ?? { total: 0, done: 0, started: 0 }
-  const e = expressionMap.get(lessonId) ?? { total: 0, done: 0, started: 0 }
-  const total = g.total + e.total
-  if (total === 0) return "未登録"
-  const done = g.done + e.done
-  if (done === total) return "完了"
-  if (g.started + e.started + done > 0) return "練習中"
-  return "登録済み"
-}
-
 // ─── Components ─────────────────────────────────────────────────────────────
 
-function StatusBadge({ status }: { status: LessonStatus }) {
-  const styles: Record<LessonStatus, string> = {
+function StatusBadge({ status }: { status: Lesson["status"] }) {
+  const styles: Record<Lesson["status"], string> = {
     未登録: "border-border text-muted-foreground",
-    登録済み: "border-blue-300 bg-blue-50 text-blue-700",
     練習中: "border-amber-300 bg-amber-50 text-amber-700",
-    完了: "border-green-300 bg-green-50 text-green-700",
+    習得済み: "border-green-300 bg-green-50 text-green-700",
   }
   return (
     <Badge variant="outline" className={styles[status]}>
@@ -364,7 +347,6 @@ function LessonList({
   return (
     <div className="space-y-1">
       {lessons.map((lesson) => {
-        const status = computeStatus(lesson.id, grammarMap, expressionMap)
         const g = grammarMap.get(lesson.id) ?? { total: 0, done: 0, started: 0 }
         const e = expressionMap.get(lesson.id) ?? { total: 0, done: 0, started: 0 }
         return (
@@ -392,7 +374,7 @@ function LessonList({
                 )}
               </div>
             )}
-            <StatusBadge status={status} />
+            <StatusBadge status={lesson.status} />
           </div>
         )
       })}
@@ -452,18 +434,12 @@ export default function TextsPage() {
 
   const statusSummary = (level: number) => {
     const lvl = byLevel(level)
-    const done = lvl.filter(
-      (l) => computeStatus(l.id, grammarMap, expressionMap) === "完了"
-    ).length
-    const inProgress = lvl.filter(
-      (l) => computeStatus(l.id, grammarMap, expressionMap) === "練習中"
-    ).length
-    return `完了 ${done} / 練習中 ${inProgress} / 全 ${lvl.length} 件`
+    const done = lvl.filter((l) => l.status === "習得済み").length
+    const inProgress = lvl.filter((l) => l.status === "練習中").length
+    return `習得済み ${done} / 練習中 ${inProgress} / 全 ${lvl.length} 件`
   }
 
-  const unregisteredLessons = lessons.filter(
-    (l) => computeStatus(l.id, grammarMap, expressionMap) === "未登録"
-  )
+  const unregisteredLessons = lessons.filter((l) => l.status === "未登録")
 
   if (loading) {
     return (
