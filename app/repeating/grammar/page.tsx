@@ -118,7 +118,7 @@ export default function GrammarRepeatingPage() {
         if (cancelRef.current) break
         await speakLine(examples[i], i, playRate)
         if (i < examples.length - 1 && !cancelRef.current) {
-          await pause(100)
+          await pause(30)
         }
       }
 

@@ -119,7 +119,7 @@ export default function ExpressionRepeatingPage() {
         const ttsText = lines[i].replace(/^[AB]:\s*/i, "")
         await speakLine(ttsText, i, playRate)
         if (!cancelRef.current) {
-          await pause(100)
+          await pause(30)
         }
       }
 
