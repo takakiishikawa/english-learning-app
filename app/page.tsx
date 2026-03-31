@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
 import { Flame, CalendarDays, BookOpen, MessageSquare, ChevronRight } from "lucide-react"
+import { PracticeChart } from "@/components/practice-chart"
 
 function calculateStreak(dates: string[]): number {
   if (dates.length === 0) return 0
@@ -24,110 +25,6 @@ function calculateStreak(dates: string[]): number {
   return streak
 }
 
-function SimpleLineChart({
-  data,
-}: {
-  data: { date: string; grammar: number; expression: number }[]
-}) {
-  const hasData = data.some((d) => d.grammar > 0 || d.expression > 0)
-  if (!hasData) {
-    return (
-      <div className="h-[120px] flex items-center justify-center text-sm text-muted-foreground">
-        練習ログが溜まるとグラフが表示されます
-      </div>
-    )
-  }
-
-  const W = 500
-  const H = 120
-  const pt = 12, pb = 24, pl = 28, pr = 40
-  const iw = W - pl - pr
-  const ih = H - pt - pb
-  const allVals = data.flatMap((d) => [d.grammar, d.expression])
-  const maxVal = Math.max(...allVals, 1)
-
-  const x = (i: number) => pl + (i / (data.length - 1)) * iw
-  const y = (v: number) => pt + (1 - v / maxVal) * ih
-
-  const gPath = data
-    .map((d, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(d.grammar).toFixed(1)}`)
-    .join(" ")
-  const ePath = data
-    .map((d, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(d.expression).toFixed(1)}`)
-    .join(" ")
-
-  const last = data[data.length - 1]
-  const showIndices = [0, 6, 13].filter((i) => i < data.length)
-
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-[120px]">
-      {[0, 0.5, 1].map((frac) => {
-        const yv = pt + (1 - frac) * ih
-        return (
-          <line
-            key={frac}
-            x1={pl}
-            y1={yv}
-            x2={W - pr}
-            y2={yv}
-            stroke="gray"
-            strokeOpacity="0.15"
-            strokeWidth="1"
-          />
-        )
-      })}
-      <path
-        d={gPath}
-        fill="none"
-        stroke="#6366f1"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d={ePath}
-        fill="none"
-        stroke="#22c55e"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <circle cx={x(data.length - 1)} cy={y(last.grammar)} r="3" fill="#6366f1" />
-      <text
-        x={x(data.length - 1) + 6}
-        y={y(last.grammar) + 4}
-        fontSize="10"
-        fill="#6366f1"
-        fontWeight="600"
-      >
-        {last.grammar}
-      </text>
-      <circle cx={x(data.length - 1)} cy={y(last.expression)} r="3" fill="#22c55e" />
-      <text
-        x={x(data.length - 1) + 6}
-        y={y(last.expression) + 4}
-        fontSize="10"
-        fill="#22c55e"
-        fontWeight="600"
-      >
-        {last.expression}
-      </text>
-      {showIndices.map((i) => (
-        <text
-          key={i}
-          x={x(i)}
-          y={H - 6}
-          textAnchor="middle"
-          fontSize="9"
-          fill="gray"
-          opacity="0.6"
-        >
-          {data[i].date.slice(5)}
-        </text>
-      ))}
-    </svg>
-  )
-}
 
 export default async function HomePage() {
   const supabase = await createClient()
@@ -281,27 +178,7 @@ export default async function HomePage() {
         </div>
       </div>
 
-      {/* Done Count Trend Chart */}
-      <Card className="shadow-sm">
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-semibold">日次練習数（14日間）</CardTitle>
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <span className="inline-block w-3 h-0.5 bg-indigo-500 rounded" />
-                文法
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="inline-block w-3 h-0.5 bg-green-500 rounded" />
-                フレーズ
-              </span>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <SimpleLineChart data={chartData} />
-        </CardContent>
-      </Card>
+      <PracticeChart data={chartData} />
     </div>
   )
 }
