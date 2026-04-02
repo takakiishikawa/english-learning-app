@@ -35,6 +35,7 @@ export default function GrammarRepeatingPage() {
   const [loading, setLoading] = useState(true)
   const [showComplete, setShowComplete] = useState(false)
   const cancelRef = useRef(false)
+  const userCancelledRef = useRef(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
@@ -62,6 +63,7 @@ export default function GrammarRepeatingPage() {
 
   const stopSpeech = useCallback(() => {
     cancelRef.current = true
+    userCancelledRef.current = true
     if (audioRef.current) {
       audioRef.current.pause()
       audioRef.current = null
@@ -102,6 +104,7 @@ export default function GrammarRepeatingPage() {
   const handlePlay = useCallback(async () => {
     if (items.length === 0) return
     cancelRef.current = false
+    userCancelledRef.current = false
     setPlaying(true)
 
     let localItems = [...items]
@@ -151,9 +154,9 @@ export default function GrammarRepeatingPage() {
       await pause(50)
     }
 
-    if (!cancelRef.current) {
-      setPlaying(false)
-      setCurrentLine(-1)
+    setPlaying(false)
+    setCurrentLine(-1)
+    if (!userCancelledRef.current) {
       setShowComplete(true)
     }
   }, [items, index, rate, speakLine])
