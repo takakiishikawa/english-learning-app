@@ -10,6 +10,7 @@ import { Slider } from "@/components/ui/slider"
 import { incrementExpressionPlayCount } from "@/app/actions/practice"
 import type { Expression } from "@/lib/types"
 import { Play, Square, ChevronLeft, ChevronRight, Star, CheckCircle2 } from "lucide-react"
+import { ConversationLines } from "@/components/conversation-lines"
 
 function StarRating({ value }: { value: number }) {
   return (
@@ -208,27 +209,7 @@ export default function ExpressionRepeatingPage() {
           </CardHeader>
           <CardContent>
             <p className="text-base font-medium mb-3">会話例:</p>
-            <div className="space-y-2">
-              {lines.map((line, i) => {
-                const isA = line.startsWith("A:")
-                return (
-                  <div
-                    key={i}
-                    className={`rounded-lg px-3 py-2 text-base transition-colors ${
-                      i === currentLine
-                        ? isA
-                          ? "bg-blue-600 text-white"
-                          : "bg-amber-600 text-white"
-                        : isA
-                        ? "bg-blue-50 text-blue-800"
-                        : "bg-amber-50 text-amber-800"
-                    }`}
-                  >
-                    {line}
-                  </div>
-                )
-              })}
-            </div>
+            <ConversationLines lines={lines} currentLine={currentLine} />
             <p className="text-sm text-muted-foreground mt-3">
               場面: {current?.usage_scene}
             </p>

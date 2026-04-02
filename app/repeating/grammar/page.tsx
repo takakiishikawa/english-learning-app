@@ -10,6 +10,7 @@ import { Slider } from "@/components/ui/slider"
 import { incrementGrammarPlayCount } from "@/app/actions/practice"
 import type { Grammar } from "@/lib/types"
 import { Play, Square, ChevronLeft, ChevronRight, Star, CheckCircle2 } from "lucide-react"
+import { ConversationLines } from "@/components/conversation-lines"
 
 function StarRating({ value }: { value: number }) {
   return (
@@ -119,9 +120,10 @@ export default function GrammarRepeatingPage() {
 
       for (let i = 0; i < examples.length; i++) {
         if (cancelRef.current) break
-        await speakLine(examples[i], i, playRate)
+        const ttsText = examples[i].replace(/^[AB]:\s*/i, "")
+        await speakLine(ttsText, i, playRate)
         if (i < examples.length - 1 && !cancelRef.current) {
-          await pause(30)
+          await pause(10)
         }
       }
 
@@ -203,21 +205,8 @@ export default function GrammarRepeatingPage() {
             <p className="text-base text-muted-foreground whitespace-pre-line">{current?.summary}</p>
           </CardHeader>
           <CardContent>
-            <p className="text-base font-medium mb-3">例文:</p>
-            <ul className="space-y-2">
-              {examples.map((ex, i) => (
-                <li
-                  key={i}
-                  className={`rounded-lg px-3 py-2 text-base transition-colors ${
-                    i === currentLine
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
-                  }`}
-                >
-                  {ex}
-                </li>
-              ))}
-            </ul>
+            <p className="text-base font-medium mb-3">会話例:</p>
+            <ConversationLines lines={examples} currentLine={currentLine} />
             <p className="text-sm text-muted-foreground mt-3">
               場面: {current?.usage_scene}
             </p>
