@@ -68,34 +68,35 @@ function buildMonthlyData(logs: PracticeLog[], ncLogs: NcLog[]): {
   }
 }
 
-function buildCumulativeData(logs: PracticeLog[], ncLogs: NcLog[]): {
+// 全期間: 日次の実績値をそのまま表示。legend の合計 = 全期間の総合計になる
+function buildAllTimeData(logs: PracticeLog[], ncLogs: NcLog[]): {
   repeating: LineChartPoint[]
   speaking: LineChartPoint[]
   nativeCamp: LineChartPoint[]
 } {
-  const sortedLogs = [...logs].sort((a, b) => a.practiced_at.localeCompare(b.practiced_at))
-  const sortedNc = [...ncLogs].sort((a, b) => a.logged_at.localeCompare(b.logged_at))
+  const sorted = [...logs].sort((a, b) => a.practiced_at.localeCompare(b.practiced_at))
 
-  let cumGrammar = 0, cumExpression = 0, cumSpeaking = 0
-  const repeating: LineChartPoint[] = []
-  const speaking: LineChartPoint[] = []
-  for (const l of sortedLogs) {
-    cumGrammar += l.grammar_done_count
-    cumExpression += l.expression_done_count
-    cumSpeaking += l.speaking_count
-    const label = fmtDate(l.practiced_at)
-    repeating.push({ label, grammar: cumGrammar, expression: cumExpression })
-    speaking.push({ label, speaking: cumSpeaking })
+  const ncDayMap = new Map<string, number>()
+  for (const nc of ncLogs) {
+    ncDayMap.set(nc.logged_at, (ncDayMap.get(nc.logged_at) ?? 0) + nc.minutes)
   }
+  const sortedNcDays = [...ncDayMap.keys()].sort()
 
-  let cumMinutes = 0
-  const nativeCamp: LineChartPoint[] = []
-  for (const nc of sortedNc) {
-    cumMinutes += nc.minutes
-    nativeCamp.push({ label: fmtDate(nc.logged_at), minutes: cumMinutes })
+  return {
+    repeating: sorted.map((l) => ({
+      label: fmtDate(l.practiced_at),
+      grammar: l.grammar_done_count,
+      expression: l.expression_done_count,
+    })),
+    speaking: sorted.map((l) => ({
+      label: fmtDate(l.practiced_at),
+      speaking: l.speaking_count,
+    })),
+    nativeCamp: sortedNcDays.map((d) => ({
+      label: fmtDate(d),
+      minutes: ncDayMap.get(d)!,
+    })),
   }
-
-  return { repeating, speaking, nativeCamp }
 }
 
 const repeatingSeries: LineChartSeries[] = [
@@ -103,7 +104,7 @@ const repeatingSeries: LineChartSeries[] = [
   { key: "expression", label: "フレーズ", color: "#10B981" },
 ]
 const speakingSeries: LineChartSeries[] = [
-  { key: "speaking", label: "Speaking", color: "#3B82F6" },
+  { key: "speaking", label: "スピーキング", color: "#3B82F6" },
 ]
 const ncSeries: LineChartSeries[] = [
   { key: "minutes", label: "学習時間", color: "#10B981" },
@@ -116,17 +117,17 @@ export function ReportCharts({
   logs: PracticeLog[]
   ncLogs: NcLog[]
 }) {
-  const [mode, setMode] = useState<"monthly" | "cumulative">("monthly")
+  const [mode, setMode] = useState<"monthly" | "alltime">("monthly")
 
   const monthly = buildMonthlyData(logs, ncLogs)
-  const cumulative = buildCumulativeData(logs, ncLogs)
-  const data = mode === "monthly" ? monthly : cumulative
+  const alltime = buildAllTimeData(logs, ncLogs)
+  const data = mode === "monthly" ? monthly : alltime
 
   return (
-    <Tabs value={mode} onValueChange={(v) => setMode(v as "monthly" | "cumulative")}>
+    <Tabs value={mode} onValueChange={(v) => setMode(v as "monthly" | "alltime")}>
       <TabsList>
         <TabsTrigger value="monthly">月次</TabsTrigger>
-        <TabsTrigger value="cumulative">累計</TabsTrigger>
+        <TabsTrigger value="alltime">全期間</TabsTrigger>
       </TabsList>
 
       <TabsContent value={mode} className="space-y-4 mt-4">
@@ -137,7 +138,7 @@ export function ReportCharts({
           unit="回"
         />
         <LineChart
-          title="Speaking 練習回数"
+          title="スピーキング"
           series={speakingSeries}
           data={data.speaking}
           unit="回"
