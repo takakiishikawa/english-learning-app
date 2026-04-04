@@ -1,8 +1,20 @@
 import { createClient } from "@/lib/supabase/server"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import Link from "next/link"
-import { Flame, CalendarDays, BookOpen, MessageSquare, ChevronRight } from "lucide-react"
-import { PracticeChart } from "@/components/practice-chart"
+import { Card, CardContent } from "@/components/ui/card"
+import { Flame } from "lucide-react"
+import { CTASection } from "@/components/cta-section"
+import { MetricsSection } from "@/components/metrics-section"
+import { LineChart, type LineChartPoint } from "@/components/line-chart"
+import { DashboardAutoCheck } from "@/components/dashboard-auto-check"
+import type { SpeakingScore } from "@/lib/types"
+
+function getWeekMonday(date: Date): Date {
+  const d = new Date(date)
+  const day = d.getDay()
+  const diff = day === 0 ? -6 : 1 - day
+  d.setDate(d.getDate() + diff)
+  d.setHours(0, 0, 0, 0)
+  return d
+}
 
 function calculateStreak(dates: string[]): number {
   if (dates.length === 0) return 0
@@ -25,86 +37,115 @@ function calculateStreak(dates: string[]): number {
   return streak
 }
 
+function fmtDate(d: Date): string {
+  return `${d.getMonth() + 1}/${d.getDate()}`
+}
 
 export default async function HomePage() {
   const supabase = await createClient()
 
-  const last14Days = Array.from({ length: 14 }, (_, i) => {
-    const d = new Date()
-    d.setDate(d.getDate() - 13 + i)
-    return d.toISOString().split("T")[0]
+  const today = new Date()
+  const todayStr = today.toISOString().split("T")[0]
+  const thisMonday = getWeekMonday(today)
+  const thisMondayStr = thisMonday.toISOString().split("T")[0]
+
+  // 8 week buckets: index 0 = oldest, index 7 = this week
+  const weeks = Array.from({ length: 8 }, (_, i) => {
+    const mon = new Date(thisMonday)
+    mon.setDate(mon.getDate() - (7 - i) * 7)
+    const sun = new Date(mon)
+    sun.setDate(sun.getDate() + 6)
+    return {
+      monStr: mon.toISOString().split("T")[0],
+      sunStr: sun.toISOString().split("T")[0],
+      label: `${fmtDate(mon)}〜${fmtDate(sun)}`,
+    }
   })
 
-  const [logsResult, grammarResult, expressionsResult, logsChartResult] =
+  const rangeStartStr = weeks[0].monStr
+
+  const [logsResult, grammarResult, expressionsResult, rangeLogsResult, scoresResult] =
     await Promise.all([
       supabase.from("practice_logs").select("practiced_at"),
       supabase.from("grammar").select("play_count"),
       supabase.from("expressions").select("play_count"),
       supabase
         .from("practice_logs")
-        .select("practiced_at, grammar_done_count, expression_done_count")
-        .in("practiced_at", last14Days)
+        .select("practiced_at, grammar_done_count, expression_done_count, speaking_count, native_camp_count")
+        .gte("practiced_at", rangeStartStr)
+        .lte("practiced_at", todayStr)
         .order("practiced_at"),
+      supabase
+        .from("speaking_scores")
+        .select("id, user_id, score, tested_at, created_at")
+        .order("tested_at"),
     ])
 
-  const logs = logsResult.data ?? []
+  const allLogs = logsResult.data ?? []
   const grammars = grammarResult.data ?? []
   const expressions = expressionsResult.data ?? []
+  const rangeLogs = rangeLogsResult.data ?? []
+  const scores = (scoresResult.data ?? []) as SpeakingScore[]
 
-  const streak = calculateStreak(logs.map((l) => l.practiced_at))
-  const thisMonth = new Date().toISOString().slice(0, 7)
-  const monthlyDays = logs.filter((l) =>
-    l.practiced_at.startsWith(thisMonth)
-  ).length
+  // Streak + monthly days
+  const streak = calculateStreak(allLogs.map((l) => l.practiced_at))
+  const thisMonthStr = today.toISOString().slice(0, 7)
+  const monthlyDays = allLogs.filter((l) => l.practiced_at.startsWith(thisMonthStr)).length
+
+  // Grammar / expression counts
+  const grammarsInProgress = grammars.filter((g) => g.play_count > 0 && g.play_count < 10).length
   const grammarDone = grammars.filter((g) => g.play_count >= 10).length
+  const expressionsInProgress = expressions.filter((e) => e.play_count > 0 && e.play_count < 10).length
   const expressionDone = expressions.filter((e) => e.play_count >= 10).length
 
-  const logMap = new Map(
-    (logsChartResult.data ?? []).map((l) => [l.practiced_at, l])
-  )
-  const chartData = last14Days.map((date) => {
-    const log = logMap.get(date)
-    return {
-      date,
-      grammar: log?.grammar_done_count ?? 0,
-      expression: log?.expression_done_count ?? 0,
-    }
+  // This week's metrics
+  const thisWeekLogs = rangeLogs.filter((l) => l.practiced_at >= thisMondayStr)
+  const weeklyGrammar = thisWeekLogs.reduce((s, l) => s + (l.grammar_done_count ?? 0), 0)
+  const weeklyExpression = thisWeekLogs.reduce((s, l) => s + (l.expression_done_count ?? 0), 0)
+  const weeklyRepeating = weeklyGrammar + weeklyExpression
+  const weeklySpeaking = thisWeekLogs.reduce((s, l) => s + (l.speaking_count ?? 0), 0)
+  const weeklyNativeCampCount = thisWeekLogs.reduce((s, l) => s + (l.native_camp_count ?? 0), 0)
+
+  // Speaking score metrics
+  const sortedScores = [...scores].sort((a, b) => b.tested_at.localeCompare(a.tested_at))
+  const latestScore = sortedScores.length > 0 ? sortedScores[0].score : null
+  const scoreDiff = sortedScores.length >= 2 ? sortedScores[0].score - sortedScores[1].score : null
+
+  // Today's native camp check for auto-modal
+  const todayLog = rangeLogs.find((l) => l.practiced_at === todayStr)
+  const hasNativeCampToday = (todayLog?.native_camp_count ?? 0) > 0
+
+  // Chart: weekly repeating breakdown
+  const repeatingChartData: LineChartPoint[] = weeks.map(({ monStr, sunStr, label }) => {
+    let grammar = 0,
+      expression = 0
+    rangeLogs.forEach((l) => {
+      if (l.practiced_at >= monStr && l.practiced_at <= sunStr) {
+        grammar += l.grammar_done_count ?? 0
+        expression += l.expression_done_count ?? 0
+      }
+    })
+    return { label, grammar, expression }
   })
 
-  const metrics = [
-    {
-      title: "連続練習日数",
-      value: streak,
-      unit: "日",
-      icon: Flame,
-      color: "text-neutral-500",
-      bg: "bg-neutral-100",
-    },
-    {
-      title: "今月の練習日数",
-      value: monthlyDays,
-      unit: "日",
-      icon: CalendarDays,
-      color: "text-neutral-500",
-      bg: "bg-neutral-100",
-    },
-    {
-      title: "文法 Done",
-      value: grammarDone,
-      unit: "件",
-      icon: BookOpen,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
-    },
-    {
-      title: "フレーズ Done",
-      value: expressionDone,
-      unit: "件",
-      icon: MessageSquare,
-      color: "text-[#10B981]",
-      bg: "bg-[#ECFDF5]",
-    },
-  ]
+  // Chart: weekly native camp minutes
+  const ncChartData: LineChartPoint[] = weeks.map(({ monStr, sunStr, label }) => {
+    let minutes = 0
+    rangeLogs.forEach((l) => {
+      if (l.practiced_at >= monStr && l.practiced_at <= sunStr) {
+        minutes += (l.native_camp_count ?? 0) * 25
+      }
+    })
+    return { label, minutes }
+  })
+
+  // Chart: speaking score per test date
+  const scoreChartData: LineChartPoint[] = [...scores]
+    .sort((a, b) => a.tested_at.localeCompare(b.tested_at))
+    .map((s) => {
+      const d = new Date(s.tested_at)
+      return { label: fmtDate(d), score: s.score }
+    })
 
   return (
     <div className="space-y-8 max-w-4xl">
@@ -113,72 +154,77 @@ export default async function HomePage() {
         <p className="text-muted-foreground mt-1">学習進捗の概要</p>
       </div>
 
-      {/* Metric Cards */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {metrics.map(({ title, value, unit, icon: Icon, color, bg }) => (
-          <Card key={title} className="shadow-sm">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  {title}
-                </CardTitle>
-                <div className={`rounded-lg p-2 ${bg}`}>
-                  <Icon className={`h-5 w-5 ${color}`} />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-bold">{value}</span>
-                <span className="text-base text-muted-foreground">{unit}</span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {/* Streak Card */}
+      <Card className="shadow-sm">
+        <CardContent className="flex items-center gap-4 p-5">
+          <div className="rounded-xl bg-orange-50 p-3">
+            <Flame className="h-7 w-7 text-orange-500" />
+          </div>
+          <div>
+            <div className="flex items-baseline gap-1">
+              <span className="text-4xl font-bold">{streak}</span>
+              <span className="text-lg text-muted-foreground">日連続</span>
+            </div>
+            <p className="text-sm text-muted-foreground mt-0.5">今月 {monthlyDays} 日練習</p>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Practice Shortcuts */}
+      {/* 練習を始める */}
       <div>
         <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
           練習を始める
         </h2>
-        <div className="grid grid-cols-2 gap-3">
-          <Link href="/repeating/grammar">
-            <Card className="cursor-pointer border-2 border-blue-200 bg-blue-50/40 hover:border-blue-400 hover:bg-blue-50 hover:shadow-md transition-all group">
-              <CardContent className="flex items-center gap-3 p-4">
-                <div className="rounded-lg bg-blue-100 p-2.5 group-hover:bg-blue-200 transition-colors">
-                  <BookOpen className="h-5 w-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="font-semibold text-base text-blue-900">文法練習</p>
-                  <p className="text-sm text-blue-600/70">
-                    {grammars.filter((g) => g.play_count < 10).length} 件 練習中
-                  </p>
-                </div>
-                <ChevronRight className="h-5 w-5 text-blue-400 ml-auto group-hover:text-blue-600 transition-colors" />
-              </CardContent>
-            </Card>
-          </Link>
-          <Link href="/repeating/expression">
-            <Card className="cursor-pointer border-2 border-green-200 bg-green-50/40 hover:border-green-400 hover:bg-green-50 hover:shadow-md transition-all group">
-              <CardContent className="flex items-center gap-3 p-4">
-                <div className="rounded-lg bg-green-100 p-2.5 group-hover:bg-green-200 transition-colors">
-                  <MessageSquare className="h-5 w-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="font-semibold text-base text-green-900">フレーズ練習</p>
-                  <p className="text-sm text-green-600/70">
-                    {expressions.filter((e) => e.play_count < 10).length} 件 練習中
-                  </p>
-                </div>
-                <ChevronRight className="h-5 w-5 text-green-400 ml-auto group-hover:text-green-600 transition-colors" />
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
+        <CTASection
+          grammarsInProgress={grammarsInProgress}
+          expressionsInProgress={expressionsInProgress}
+          grammarDone={grammarDone}
+          expressionDone={expressionDone}
+        />
       </div>
 
-      <PracticeChart data={chartData} />
+      {/* 学習ログ */}
+      <div className="space-y-4">
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+          学習ログ
+        </h2>
+        <MetricsSection
+          weeklyRepeating={weeklyRepeating}
+          weeklyGrammar={weeklyGrammar}
+          weeklyExpression={weeklyExpression}
+          weeklySpeaking={weeklySpeaking}
+          weeklyNativeCampCount={weeklyNativeCampCount}
+          latestScore={latestScore}
+          scoreDiff={scoreDiff}
+          initialScores={scores}
+        />
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <LineChart
+            title="リピーティング推移（週別）"
+            series={[
+              { key: "grammar", label: "文法", color: "#3B82F6" },
+              { key: "expression", label: "フレーズ", color: "#10B981" },
+            ]}
+            data={repeatingChartData}
+            unit="回"
+          />
+          <LineChart
+            title="Native Camp 学習時間（週別）"
+            series={[{ key: "minutes", label: "学習時間", color: "#8B5CF6" }]}
+            data={ncChartData}
+            unit="分"
+          />
+        </div>
+        <LineChart
+          title="Speaking スコア推移"
+          series={[{ key: "score", label: "スコア", color: "#F59E0B" }]}
+          data={scoreChartData}
+          unit="点"
+          emptyText="スコアを記録するとグラフが表示されます"
+        />
+      </div>
+
+      <DashboardAutoCheck hasNativeCampToday={hasNativeCampToday} />
     </div>
   )
 }
