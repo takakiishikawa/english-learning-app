@@ -394,7 +394,7 @@ function LessonList({
         return (
           <div
             key={lesson.id}
-            className="flex items-center gap-4 rounded-lg border px-4 py-3"
+            className="flex items-center gap-4 rounded-lg border bg-white dark:bg-card px-4 py-3"
           >
             <span className="font-mono text-sm font-medium w-16 text-muted-foreground">
               {lesson.lesson_no}

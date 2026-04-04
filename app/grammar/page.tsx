@@ -63,7 +63,7 @@ export default function GrammarPage() {
       <div className="rounded-md border overflow-auto">
         <Table>
           <TableHeader>
-            <TableRow className="sticky top-0 z-10 bg-background border-b">
+            <TableRow>
               <TableHead>文法名</TableHead>
               <TableHead>概要</TableHead>
               <TableHead>頻度</TableHead>

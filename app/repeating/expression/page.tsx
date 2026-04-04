@@ -38,6 +38,7 @@ export default function ExpressionRepeatingPage() {
   const cancelRef = useRef(false)
   const userCancelledRef = useRef(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const resumeLineRef = useRef(0)
 
   useEffect(() => {
     async function load() {
@@ -76,6 +77,7 @@ export default function ExpressionRepeatingPage() {
   const speakLine = useCallback(
     async (text: string, lineIndex: number, speakRate: number): Promise<void> => {
       if (cancelRef.current) return
+      resumeLineRef.current = lineIndex
       setCurrentLine(lineIndex)
       try {
         const response = await fetch("/api/tts", {
@@ -113,12 +115,15 @@ export default function ExpressionRepeatingPage() {
     const playRate = rate
     const initialCount = localItems.length
     let playCount = 0
+    let startLine = resumeLineRef.current
 
     while (localItems.length > 0 && !cancelRef.current && playCount < initialCount) {
       const item = localItems[localIndex]
       const lines = item.conversation.split("\n").filter(Boolean)
+      const fromLine = startLine
+      startLine = 0 // subsequent items always start from line 0
 
-      for (let i = 0; i < lines.length; i++) {
+      for (let i = fromLine; i < lines.length; i++) {
         if (cancelRef.current) break
         const ttsText = lines[i].replace(/^[AB]:\s*/i, "")
         await speakLine(ttsText, i, playRate)
@@ -129,6 +134,7 @@ export default function ExpressionRepeatingPage() {
 
       if (cancelRef.current) break
 
+      resumeLineRef.current = 0
       setCurrentLine(-1)
       playCount++
       incrementExpressionPlayCount(item.id) // fire and forget for faster transition
@@ -233,7 +239,7 @@ export default function ExpressionRepeatingPage() {
           <Button
             variant="outline"
             size="icon"
-            onClick={() => { stopSpeech(); setIndex((i) => Math.max(0, i - 1)) }}
+            onClick={() => { stopSpeech(); resumeLineRef.current = 0; setIndex((i) => Math.max(0, i - 1)) }}
             disabled={index === 0 || playing}
           >
             <ChevronLeft className="h-4 w-4" />
@@ -254,7 +260,7 @@ export default function ExpressionRepeatingPage() {
           <Button
             variant="outline"
             size="icon"
-            onClick={() => { stopSpeech(); setIndex((i) => Math.min(items.length - 1, i + 1)) }}
+            onClick={() => { stopSpeech(); resumeLineRef.current = 0; setIndex((i) => Math.min(items.length - 1, i + 1)) }}
             disabled={index === items.length - 1 || playing}
           >
             <ChevronRight className="h-4 w-4" />

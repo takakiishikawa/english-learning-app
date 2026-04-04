@@ -63,7 +63,7 @@ export default function ExpressionsPage() {
       <div className="rounded-md border overflow-auto">
         <Table>
           <TableHeader>
-            <TableRow className="sticky top-0 z-10 bg-background border-b">
+            <TableRow>
               <TableHead>種別</TableHead>
               <TableHead>表現</TableHead>
               <TableHead>意味</TableHead>
