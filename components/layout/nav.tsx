@@ -25,9 +25,9 @@ import { Dialog } from "@/components/ui/dialog"
 const navItems = [
   { href: "/", label: "ホーム", icon: HomeIcon },
   { href: "/practice", label: "リピーティング", icon: ArrowPathRoundedSquareIcon },
-  { href: "/report", label: "レポート", icon: ChartBarIcon },
   { href: "/texts", label: "テキスト", icon: DocumentTextIcon },
   { href: "/list", label: "文法・フレーズ", icon: BookOpenIcon },
+  { href: "/report", label: "レポート", icon: ChartBarIcon },
 ]
 
 function isActive(href: string, pathname: string) {

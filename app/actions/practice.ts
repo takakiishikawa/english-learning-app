@@ -153,26 +153,33 @@ export async function saveExpressions(
 
 export async function upsertNativeCampLog(date: string, count: number): Promise<{ error?: string } | null> {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "ログインが必要です" }
 
   const { data: existing } = await supabase
-    .from("practice_logs")
-    .select("grammar_done_count, expression_done_count, speaking_count")
-    .eq("practiced_at", date)
+    .from("native_camp_logs")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("logged_at", date)
     .maybeSingle()
 
-  const { error } = await supabase.from("practice_logs").upsert(
-    {
-      practiced_at: date,
-      grammar_done_count: existing?.grammar_done_count ?? 0,
-      expression_done_count: existing?.expression_done_count ?? 0,
-      speaking_count: existing?.speaking_count ?? 0,
-      native_camp_count: count,
-    },
-    { onConflict: "practiced_at" }
-  )
+  let error
+  if (existing) {
+    const result = await supabase
+      .from("native_camp_logs")
+      .update({ count })
+      .eq("id", existing.id)
+    error = result.error
+  } else {
+    const result = await supabase
+      .from("native_camp_logs")
+      .insert({ user_id: user.id, logged_at: date, count })
+    error = result.error
+  }
 
   if (error) return { error: error.message }
   revalidatePath("/")
+  revalidatePath("/report")
   return null
 }
 

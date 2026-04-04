@@ -28,7 +28,7 @@ export function LineChart({
 
   const getVal = (d: LineChartPoint, key: string): number => (d[key] as number) ?? 0
 
-  const hasData = data.some((d) => series.some((s) => getVal(d, s.key) > 0))
+  const hasData = data.length > 0
 
   const W = 500, H = 160
   const pt = 16, pb = 28, pl = 4, pr = 4

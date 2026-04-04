@@ -59,14 +59,14 @@ export default async function HomePage() {
 
   const rangeStartStr = days[0].str
 
-  const [logsResult, grammarResult, expressionsResult, rangeLogsResult, scoresResult] =
+  const [logsResult, grammarResult, expressionsResult, rangeLogsResult, scoresResult, ncLogsResult] =
     await Promise.all([
       supabase.from("practice_logs").select("practiced_at"),
       supabase.from("grammar").select("play_count"),
       supabase.from("expressions").select("play_count"),
       supabase
         .from("practice_logs")
-        .select("practiced_at, grammar_done_count, expression_done_count, speaking_count, native_camp_count")
+        .select("practiced_at, grammar_done_count, expression_done_count, speaking_count")
         .gte("practiced_at", rangeStartStr)
         .lte("practiced_at", todayStr)
         .order("practiced_at"),
@@ -74,6 +74,11 @@ export default async function HomePage() {
         .from("speaking_scores")
         .select("id, user_id, score, tested_at, created_at")
         .order("tested_at"),
+      supabase
+        .from("native_camp_logs")
+        .select("logged_at, count, minutes")
+        .gte("logged_at", rangeStartStr)
+        .lte("logged_at", todayStr),
     ])
 
   const allLogs = logsResult.data ?? []
@@ -86,7 +91,6 @@ export default async function HomePage() {
     grammar_done_count: number
     expression_done_count: number
     speaking_count: number
-    native_camp_count: number
   }>
   if (rangeLogsResult.error) {
     const { data: fallback } = await supabase
@@ -98,16 +102,22 @@ export default async function HomePage() {
     rangeLogs = (fallback ?? []).map((l) => ({
       ...l,
       speaking_count: 0,
-      native_camp_count: 0,
     }))
   } else {
     rangeLogs = (rangeLogsResult.data ?? []).map((l) => ({
       ...l,
       speaking_count: l.speaking_count ?? 0,
-      native_camp_count: l.native_camp_count ?? 0,
     }))
   }
   const scores = (scoresResult.data ?? []) as SpeakingScore[]
+
+  // NC logs: aggregate by date
+  const ncLogs = ncLogsResult.data ?? []
+  const ncByDate = new Map<string, number>()
+  for (const nc of ncLogs) {
+    const prev = ncByDate.get(nc.logged_at) ?? 0
+    ncByDate.set(nc.logged_at, prev + (nc.count ?? 0))
+  }
 
   // Streak + monthly days
   const streak = calculateStreak(allLogs.map((l) => l.practiced_at))
@@ -126,7 +136,9 @@ export default async function HomePage() {
   const weeklyExpression = thisWeekLogs.reduce((s, l) => s + (l.expression_done_count ?? 0), 0)
   const weeklyRepeating = weeklyGrammar + weeklyExpression
   const weeklySpeaking = thisWeekLogs.reduce((s, l) => s + (l.speaking_count ?? 0), 0)
-  const weeklyNativeCampCount = thisWeekLogs.reduce((s, l) => s + (l.native_camp_count ?? 0), 0)
+  const weeklyNativeCampCount = [...ncByDate.entries()]
+    .filter(([date]) => date >= thisMondayStr)
+    .reduce((s, [, count]) => s + count, 0)
 
   // Speaking score metrics
   const sortedScores = [...scores].sort((a, b) => b.tested_at.localeCompare(a.tested_at))
@@ -134,8 +146,7 @@ export default async function HomePage() {
   const scoreDiff = sortedScores.length >= 2 ? sortedScores[0].score - sortedScores[1].score : null
 
   // Today's native camp check for auto-modal
-  const todayLog = rangeLogs.find((l) => l.practiced_at === todayStr)
-  const hasNativeCampToday = (todayLog?.native_camp_count ?? 0) > 0
+  const hasNativeCampToday = (ncByDate.get(todayStr) ?? 0) > 0
 
   // Chart: daily repeating breakdown (7 days)
   const logMap = new Map(rangeLogs.map((l) => [l.practiced_at, l]))
@@ -149,10 +160,10 @@ export default async function HomePage() {
   })
 
   // Chart: daily native camp minutes (7 days)
-  const ncChartData: LineChartPoint[] = days.map(({ str, label }) => {
-    const l = logMap.get(str)
-    return { label, minutes: (l?.native_camp_count ?? 0) * 25 }
-  })
+  const ncChartData: LineChartPoint[] = days.map(({ str, label }) => ({
+    label,
+    minutes: (ncByDate.get(str) ?? 0) * 25,
+  }))
 
   // Chart: speaking score per test date
   const scoreChartData: LineChartPoint[] = [...scores]
