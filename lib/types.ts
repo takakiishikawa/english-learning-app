@@ -41,7 +41,15 @@ export interface PracticeLog {
   grammar_done_count: number
   expression_done_count: number
   speaking_count: number
-  native_camp_count: number
+}
+
+export interface NativeCampLog {
+  id: string
+  user_id: string
+  logged_at: string
+  count: number
+  minutes: number
+  created_at: string
 }
 
 export interface SpeakingScore {

@@ -197,9 +197,9 @@ export function Nav() {
           {/* User profile */}
           <button
             onClick={openProfile}
-            className="flex items-center gap-2.5 rounded-md px-2 py-2 w-full text-left hover:bg-neutral-200/60 dark:hover:bg-neutral-700/50 transition-colors group"
+            className="flex items-center gap-3 rounded-md border-l-[3px] border-l-transparent pl-3 pr-3 py-2 w-full text-left hover:bg-neutral-200/60 dark:hover:bg-neutral-700/50 transition-colors group"
           >
-            <Avatar url={avatarUrl} name={displayName || "U"} size={7} />
+            <Avatar url={avatarUrl} name={displayName || "U"} size={5} />
             <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300 truncate flex-1 min-w-0">
               {displayName || "—"}
             </span>
@@ -220,10 +220,10 @@ export function Nav() {
             コンセプト
           </Link>
 
-          {/* Theme toggle — shows actual current state */}
+          {/* Theme toggle */}
           <button
             onClick={toggleTheme}
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-neutral-500 hover:bg-neutral-200/60 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-700/50 dark:hover:text-neutral-200 transition-colors"
+            className="flex items-center gap-3 rounded-md border-l-[3px] border-l-transparent pl-3 pr-3 py-2 text-sm font-medium text-neutral-500 hover:bg-neutral-200/60 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-700/50 dark:hover:text-neutral-200 transition-colors"
           >
             {isDark ? (
               <MoonIcon className="h-5 w-5 shrink-0" />
@@ -234,15 +234,13 @@ export function Nav() {
           </button>
 
           {/* Logout */}
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
             onClick={handleSignOut}
-            className="flex items-center gap-2 justify-start text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 px-3"
+            className="flex items-center gap-3 rounded-md border-l-[3px] border-l-transparent pl-3 pr-3 py-2 text-sm font-medium text-neutral-500 hover:bg-neutral-200/60 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-700/50 dark:hover:text-neutral-200 transition-colors"
           >
-            <ArrowRightOnRectangleIcon className="h-5 w-5" />
+            <ArrowRightOnRectangleIcon className="h-5 w-5 shrink-0" />
             ログアウト
-          </Button>
+          </button>
         </div>
       </nav>
 
