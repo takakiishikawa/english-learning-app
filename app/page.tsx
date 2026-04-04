@@ -164,6 +164,12 @@ export default async function HomePage() {
     minutes: (ncByDate.get(str) ?? 0) * 25,
   }))
 
+  // Chart: daily speaking count (7 days)
+  const speakingChartData: LineChartPoint[] = days.map(({ str, label }) => {
+    const l = logMap.get(str)
+    return { label, count: l?.speaking_count ?? 0 }
+  })
+
   // Chart: speaking score per test date
   const scoreChartData: LineChartPoint[] = [...scores]
     .sort((a, b) => a.tested_at.localeCompare(b.tested_at))
@@ -217,6 +223,12 @@ export default async function HomePage() {
               { key: "expression", label: "フレーズ", color: "#10B981" },
             ]}
             data={repeatingChartData}
+            unit="回"
+          />
+          <LineChart
+            title="スピーキング（7日間）"
+            series={[{ key: "count", label: "練習回数", color: "#8B5CF6" }]}
+            data={speakingChartData}
             unit="回"
           />
           <LineChart
