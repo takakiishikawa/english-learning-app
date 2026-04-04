@@ -1,10 +1,9 @@
 import { createClient } from "@/lib/supabase/server"
-import { Card, CardContent } from "@/components/ui/card"
-import { Flame } from "lucide-react"
 import { CTASection } from "@/components/cta-section"
 import { MetricsSection } from "@/components/metrics-section"
 import { LineChart, type LineChartPoint } from "@/components/line-chart"
 import { DashboardAutoCheck } from "@/components/dashboard-auto-check"
+import { StreakPopup } from "@/components/streak-popup"
 import type { SpeakingScore } from "@/lib/types"
 
 function getWeekMonday(date: Date): Date {
@@ -175,26 +174,12 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-8 max-w-4xl">
+      <StreakPopup streak={streak} />
+
       <div>
         <h1 className="text-3xl font-bold">ホーム</h1>
         <p className="text-muted-foreground mt-1">学習進捗の概要</p>
       </div>
-
-      {/* Streak Card */}
-      <Card className="shadow-sm">
-        <CardContent className="flex items-center gap-4 p-5">
-          <div className="rounded-xl bg-orange-50 p-3">
-            <Flame className="h-7 w-7 text-orange-500" />
-          </div>
-          <div>
-            <div className="flex items-baseline gap-1">
-              <span className="text-4xl font-bold">{streak}</span>
-              <span className="text-lg text-muted-foreground">日連続</span>
-            </div>
-            <p className="text-sm text-muted-foreground mt-0.5">今月 {monthlyDays} 日練習</p>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* 練習を始める */}
       <div>
@@ -226,7 +211,7 @@ export default async function HomePage() {
         />
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <LineChart
-            title="リピーティング推移（直近7日）"
+            title="リピーティング（直近7日）"
             series={[
               { key: "grammar", label: "文法", color: "#3B82F6" },
               { key: "expression", label: "フレーズ", color: "#10B981" },
@@ -235,7 +220,7 @@ export default async function HomePage() {
             unit="回"
           />
           <LineChart
-            title="Native Camp 学習時間（直近7日）"
+            title="Native Camp（直近7日）"
             series={[{ key: "minutes", label: "学習時間", color: "#3B82F6" }]}
             data={ncChartData}
             unit="分"

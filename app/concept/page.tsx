@@ -92,8 +92,8 @@ export default function ConceptPage() {
           headers={["要素", "内容", "NativeGoでの手段"]}
           rows={[
             ["聞ける", "音と意味の一致", "リピーティング"],
-            ["出せる", "表現が反射的に口から出る", "リピーティング"],
             ["組み立てる", "自分の考えを英語で生成する", "スピーキング"],
+            ["出せる", "表現が反射的に口から出る", "リピーティング"],
           ]}
         />
       </Section>
@@ -105,9 +105,9 @@ export default function ConceptPage() {
           <FlowStep>レッスン教材を NativeGo に貼り付ける</FlowStep>
           <FlowStep>AI が文法・フレーズ・画像を自動生成</FlowStep>
           <FlowStep>
-            <span className="font-medium">聞ける・出せる：</span>リピーティング
+            <span className="font-medium">聞ける・出せる：</span>リピーティング（文法・フレーズ）
             <br />
-            <span className="font-medium">組み立てる：</span>スピーキング
+            <span className="font-medium">組み立てる：</span>スピーキング練習
           </FlowStep>
           <FlowStep>次の Native Camp で実際に使える</FlowStep>
           <FlowStep isLast>
@@ -129,7 +129,7 @@ export default function ConceptPage() {
       </Section>
 
       {/* 行動指標 */}
-      <Section title="行動指標（KPI）">
+      <Section title="行動指標">
         <ConceptTable
           headers={["指標", "頻度"]}
           rows={[
