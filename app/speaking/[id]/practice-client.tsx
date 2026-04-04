@@ -53,7 +53,8 @@ export function PracticeClient({
   const [transcript, setTranscript] = useState("")
   const [supported, setSupported] = useState(true)
 
-  const recognitionRef = useRef<InstanceType<typeof SpeechRecognition> | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const transcriptRef = useRef("")
   const stoppedRef = useRef(false)
@@ -105,7 +106,8 @@ export function PracticeClient({
     recognition.interimResults = true
     recognitionRef.current = recognition
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    recognition.onresult = (event: any) => {
       let final = ""
       for (let i = 0; i < event.results.length; i++) {
         if (event.results[i].isFinal) final += event.results[i][0].transcript + " "
