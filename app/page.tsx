@@ -237,14 +237,14 @@ export default async function HomePage() {
             data={ncChartData}
             unit="分"
           />
+          <LineChart
+            title="Speaking スコア推移"
+            series={[{ key: "score", label: "スコア", color: "#10B981" }]}
+            data={scoreChartData}
+            unit="点"
+            emptyText="スコアを記録するとグラフが表示されます"
+          />
         </div>
-        <LineChart
-          title="Speaking スコア推移"
-          series={[{ key: "score", label: "スコア", color: "#10B981" }]}
-          data={scoreChartData}
-          unit="点"
-          emptyText="スコアを記録するとグラフが表示されます"
-        />
       </div>
 
       <DashboardAutoCheck hasNativeCampToday={hasNativeCampToday} />
