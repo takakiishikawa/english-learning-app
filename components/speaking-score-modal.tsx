@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Dialog } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { DatePicker } from "@/components/ui/date-picker"
 import { saveSpeakingScore, deleteSpeakingScore } from "@/app/actions/practice"
 import { Trash2 } from "lucide-react"
 import type { SpeakingScore } from "@/lib/types"
@@ -48,23 +49,21 @@ export function SpeakingScoreModal({
   return (
     <Dialog open={open} onClose={onClose} title="AI Speaking Test スコア記録">
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">日付</label>
-            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">スコア（0〜100）</label>
-            <Input
-              type="number"
-              min={0}
-              max={100}
-              value={score}
-              onChange={(e) =>
-                setScore(Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))
-              }
-            />
-          </div>
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">日付</label>
+          <DatePicker value={date} onChange={setDate} />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">スコア（0〜100）</label>
+          <Input
+            type="number"
+            min={0}
+            max={100}
+            value={score}
+            onChange={(e) =>
+              setScore(Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))
+            }
+          />
         </div>
         <div className="flex gap-3">
           <Button onClick={handleSave} disabled={saving} className="flex-1">
@@ -80,11 +79,11 @@ export function SpeakingScoreModal({
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
               過去の記録
             </p>
-            <div className="space-y-1 max-h-52 overflow-y-auto">
+            <div className="space-y-1 max-h-40 overflow-y-auto">
               {scores.map((s) => (
                 <div
                   key={s.id}
-                  className="flex items-center justify-between rounded-md bg-neutral-50 dark:bg-neutral-800 px-3 py-2"
+                  className="flex items-center justify-between rounded-md bg-muted px-3 py-2"
                 >
                   <span className="text-sm text-muted-foreground">
                     {s.tested_at.replace(/-/g, "/")}

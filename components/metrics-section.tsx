@@ -77,7 +77,7 @@ export function MetricsSection({
               </CardTitle>
               <button
                 onClick={() => setNcOpen(true)}
-                className="rounded-md p-1 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors text-muted-foreground hover:text-foreground"
+                className="rounded-md p-1 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                 aria-label="記録を追加"
               >
                 <PencilSquareIcon className="h-4 w-4" />
@@ -104,7 +104,7 @@ export function MetricsSection({
               </CardTitle>
               <button
                 onClick={() => setScoreOpen(true)}
-                className="rounded-md p-1 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors text-muted-foreground hover:text-foreground"
+                className="rounded-md p-1 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                 aria-label="スコアを記録"
               >
                 <PencilSquareIcon className="h-4 w-4" />
@@ -112,31 +112,30 @@ export function MetricsSection({
             </div>
           </CardHeader>
           <CardContent>
-            <div className="flex items-baseline gap-1">
-              <span className="text-4xl font-bold">
-                {latestScore !== null ? latestScore : "—"}
-              </span>
-              {latestScore !== null && (
-                <span className="text-base text-muted-foreground">点</span>
-              )}
-            </div>
-            {scoreDiff !== null && (
-              <p
-                className={`text-xs mt-1 flex items-center gap-0.5 ${
-                  scoreDiff >= 0 ? "text-[#10B981]" : "text-destructive"
-                }`}
-              >
-                {scoreDiff >= 0 ? (
-                  <ArrowUp className="h-3 w-3" />
-                ) : (
-                  <ArrowDown className="h-3 w-3" />
+            {latestScore !== null ? (
+              <>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-bold">{latestScore}</span>
+                  <span className="text-base text-muted-foreground">点</span>
+                </div>
+                {scoreDiff !== null && (
+                  <p
+                    className={`text-xs mt-1 flex items-center gap-0.5 ${
+                      scoreDiff >= 0 ? "text-[#10B981]" : "text-destructive"
+                    }`}
+                  >
+                    {scoreDiff >= 0 ? (
+                      <ArrowUp className="h-3 w-3" />
+                    ) : (
+                      <ArrowDown className="h-3 w-3" />
+                    )}
+                    前回比 {scoreDiff >= 0 ? "+" : ""}
+                    {scoreDiff}点
+                  </p>
                 )}
-                前回比 {scoreDiff >= 0 ? "+" : ""}
-                {scoreDiff}点
-              </p>
-            )}
-            {latestScore === null && (
-              <p className="text-xs text-muted-foreground mt-1">未記録</p>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground pt-1">未記録</p>
             )}
           </CardContent>
         </Card>

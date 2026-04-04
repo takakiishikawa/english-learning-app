@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Dialog } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { DatePicker } from "@/components/ui/date-picker"
 import { upsertNativeCampLog } from "@/app/actions/practice"
 
 export function NativeCampModal({
@@ -32,7 +33,7 @@ export function NativeCampModal({
       <div className="space-y-4">
         <div className="space-y-1.5">
           <label className="text-sm font-medium">日付</label>
-          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          <DatePicker value={date} onChange={setDate} />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">回数</label>

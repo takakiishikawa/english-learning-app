@@ -14,7 +14,6 @@ import {
   PencilSquareIcon,
   SunIcon,
   MoonIcon,
-  ComputerDesktopIcon,
 } from "@heroicons/react/24/outline"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
@@ -28,8 +27,6 @@ const navItems = [
   { href: "/texts", label: "テキスト", icon: DocumentTextIcon },
   { href: "/list", label: "文法・フレーズ", icon: BookOpenIcon },
 ]
-
-type Theme = "auto" | "dark" | "light"
 
 function isActive(href: string, pathname: string) {
   if (href === "/") return pathname === "/"
@@ -51,12 +48,18 @@ function isActive(href: string, pathname: string) {
 
 function Avatar({ url, name, size = 8 }: { url?: string; name: string; size?: number }) {
   const initials = name.charAt(0).toUpperCase()
-  const cls = `h-${size} w-${size} rounded-full shrink-0`
   if (url) {
-    return <img src={url} alt={name} className={`${cls} object-cover`} />
+    return (
+      <div
+        className={`h-${size} w-${size} rounded-full overflow-hidden shrink-0`}
+        style={{ minWidth: `${size * 0.25}rem`, minHeight: `${size * 0.25}rem` }}
+      >
+        <img src={url} alt={name} className="h-full w-full object-cover" />
+      </div>
+    )
   }
   return (
-    <div className={`${cls} bg-primary flex items-center justify-center text-white text-xs font-semibold`}>
+    <div className={`h-${size} w-${size} rounded-full shrink-0 bg-primary flex items-center justify-center text-white text-xs font-semibold`}>
       {initials}
     </div>
   )
@@ -77,7 +80,7 @@ export function Nav() {
   const [saving, setSaving] = useState(false)
   const [uploadError, setUploadError] = useState("")
 
-  const [theme, setTheme] = useState<Theme>("auto")
+  const [isDark, setIsDark] = useState(false)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -87,38 +90,21 @@ export function Nav() {
       setDisplayName(name)
       setAvatarUrl(avatar)
     })
-    const stored = (localStorage.getItem("theme") as Theme) || "auto"
-    setTheme(stored)
+
+    // Track actual dark state via class on <html>
+    const update = () => setIsDark(document.documentElement.classList.contains("dark"))
+    update()
+    const obs = new MutationObserver(update)
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] })
+    return () => obs.disconnect()
   }, [])
 
-  function applyTheme(t: Theme) {
-    localStorage.setItem("theme", t)
-    setTheme(t)
-    if (t === "dark") {
-      document.documentElement.classList.add("dark")
-    } else if (t === "light") {
-      document.documentElement.classList.remove("dark")
-    } else {
-      const h = parseInt(
-        new Date().toLocaleString("en-US", {
-          timeZone: "Asia/Ho_Chi_Minh",
-          hour: "numeric",
-          hour12: false,
-        })
-      )
-      document.documentElement.classList.toggle("dark", h >= 18 || h < 6)
-    }
+  function toggleTheme() {
+    const next = isDark ? "light" : "dark"
+    localStorage.setItem("theme", next)
+    if (next === "dark") document.documentElement.classList.add("dark")
+    else document.documentElement.classList.remove("dark")
   }
-
-  function cycleTheme() {
-    const next: Theme = theme === "auto" ? "dark" : theme === "dark" ? "light" : "auto"
-    applyTheme(next)
-  }
-
-  const ThemeIcon =
-    theme === "dark" ? MoonIcon : theme === "light" ? SunIcon : ComputerDesktopIcon
-  const themeLabel =
-    theme === "dark" ? "ダーク" : theme === "light" ? "ライト" : "自動"
 
   function openProfile() {
     setEditName(displayName)
@@ -164,9 +150,7 @@ export function Nav() {
       setAvatarUrl(finalUrl)
       setProfileOpen(false)
     } catch (err: unknown) {
-      setUploadError(
-        err instanceof Error ? err.message : "保存に失敗しました"
-      )
+      setUploadError(err instanceof Error ? err.message : "保存に失敗しました")
     }
     setSaving(false)
   }
@@ -234,13 +218,17 @@ export function Nav() {
             コンセプト
           </Link>
 
-          {/* Theme toggle */}
+          {/* Theme toggle — shows actual current state */}
           <button
-            onClick={cycleTheme}
+            onClick={toggleTheme}
             className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-neutral-500 hover:bg-neutral-200/60 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-700/50 dark:hover:text-neutral-200 transition-colors"
           >
-            <ThemeIcon className="h-5 w-5 shrink-0" />
-            {themeLabel}モード
+            {isDark ? (
+              <MoonIcon className="h-5 w-5 shrink-0" />
+            ) : (
+              <SunIcon className="h-5 w-5 shrink-0" />
+            )}
+            {isDark ? "ダークモード" : "ライトモード"}
           </button>
 
           {/* Logout */}
@@ -260,9 +248,18 @@ export function Nav() {
       <Dialog open={profileOpen} onClose={() => setProfileOpen(false)} title="プロフィール編集">
         <div className="space-y-4">
           <div className="flex items-center gap-4">
-            <Avatar url={previewUrl} name={editName || "U"} size={14} />
-            <div className="space-y-2 flex-1">
-              <p className="text-sm font-medium">{editName || "—"}</p>
+            {/* Perfect circle avatar preview */}
+            <div className="h-16 w-16 rounded-full overflow-hidden shrink-0 bg-primary flex items-center justify-center">
+              {previewUrl ? (
+                <img src={previewUrl} alt="avatar" className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-white text-xl font-semibold">
+                  {(editName || "U").charAt(0).toUpperCase()}
+                </span>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-sm font-medium text-foreground">{editName || "—"}</p>
               <input
                 ref={fileInputRef}
                 type="file"

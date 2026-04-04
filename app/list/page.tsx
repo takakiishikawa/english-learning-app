@@ -69,8 +69,11 @@ function GrammarTab() {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center gap-3">
         <span className="text-sm text-muted-foreground">全 {items.length} 件</span>
+        <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+          Done {items.filter((i) => i.play_count >= 10).length}
+        </span>
       </div>
 
       <div className="rounded-md border overflow-auto">
@@ -155,8 +158,11 @@ function PhraseTab() {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center gap-3">
         <span className="text-sm text-muted-foreground">全 {items.length} 件</span>
+        <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+          Done {items.filter((i) => i.play_count >= 10).length}
+        </span>
       </div>
 
       <div className="rounded-md border overflow-auto">
@@ -205,7 +211,9 @@ function PhraseTab() {
                     <div
                       key={i}
                       className={`rounded-lg px-3 py-2 text-sm ${
-                        isA ? "bg-blue-50 text-blue-900" : "bg-amber-50 text-amber-900"
+                        isA
+                          ? "bg-blue-50 dark:bg-blue-900/30 text-blue-900 dark:text-blue-200"
+                          : "bg-amber-50 dark:bg-amber-900/30 text-amber-900 dark:text-amber-200"
                       }`}
                     >
                       {line}

@@ -1,7 +1,36 @@
 @import "tailwindcss";
+@import "react-day-picker/src/style.css";
 
 /* class-based dark mode: responds to .dark on <html> */
 @variant dark (&:where(.dark, .dark *));
+
+/* react-day-picker dark mode */
+.dark .rdp-root {
+  --rdp-accent-color: #3B82F6;
+  --rdp-accent-background-color: rgba(59,130,246,0.15);
+  color: #E2E8F0;
+}
+.dark .rdp-day_button:hover {
+  background-color: #334155;
+}
+.dark .rdp-month_caption,
+.dark .rdp-nav {
+  color: #E2E8F0;
+}
+.dark .rdp-nav button {
+  color: #94A3B8;
+}
+.dark .rdp-nav button:hover {
+  background-color: #334155;
+  color: #E2E8F0;
+}
+/* sizing tweak */
+.rdp-root {
+  --rdp-day-height: 36px;
+  --rdp-day-width: 36px;
+  --rdp-day_button-height: 34px;
+  --rdp-day_button-width: 34px;
+}
 
 /* ── Design System Tokens ─────────────────────────────── */
 :root {
