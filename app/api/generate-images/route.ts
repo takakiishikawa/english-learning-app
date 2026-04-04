@@ -45,16 +45,16 @@ export async function POST(request: NextRequest) {
     try {
       const imagePrompt = `A realistic everyday scene in Ho Chi Minh City that naturally demonstrates the grammar point: ${item.name}. Scene ideas: café, gym, street market, apartment, park. Style: natural photo-realistic, warm lighting, no text in the image.`
 
-      console.log(`[generate-images] Gemini API呼び出し中: ${item.name}`)
+      console.log(`[generate-images] Imagen API呼び出し中: ${item.name}`)
 
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-fast-generate-001:predict?key=${apiKey}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: imagePrompt }] }],
-            generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
+            instances: [{ prompt: imagePrompt }],
+            parameters: { sampleCount: 1 },
           }),
         }
       )
@@ -70,18 +70,18 @@ export async function POST(request: NextRequest) {
 
       const data = await response.json()
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const parts: any[] = data.candidates?.[0]?.content?.parts ?? []
-      const inlineData = parts.find(p => p.inlineData)?.inlineData
-      const imageBytes = inlineData?.data
+      const prediction = data.predictions?.[0] as any
+      const imageBytes = prediction?.bytesBase64Encoded
+      const mimeType = prediction?.mimeType ?? "image/png"
 
       if (!imageBytes) {
         console.error(`[generate-images] imageBytes なし。レスポンス:`, JSON.stringify(data).slice(0, 500))
-        results.push({ id: item.id, status: "error", reason: `no image data. parts: ${JSON.stringify(parts).slice(0, 200)}` })
+        results.push({ id: item.id, status: "error", reason: `no image data. keys: ${Object.keys(data).join(",")}` })
         continue
       }
-      console.log(`[generate-images] imageBytes 取得成功 (${item.name}), mimeType: ${inlineData.mimeType}`)
+      console.log(`[generate-images] imageBytes 取得成功 (${item.name}), mimeType: ${mimeType}`)
 
-      const ext = inlineData.mimeType === "image/png" ? "png" : "jpg"
+      const ext = mimeType === "image/png" ? "png" : "jpg"
       const buffer = Buffer.from(imageBytes, "base64")
       const fileName = `${user.id}/${item.id}.${ext}`
 
