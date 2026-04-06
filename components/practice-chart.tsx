@@ -74,8 +74,8 @@ export function PracticeChart({ data }: { data: DataPoint[] }) {
                 <span className="inline-block w-2.5 h-2.5 rounded-full bg-blue-600" />
                 文法 {hovered ? hovered.grammar : totalGrammar}
               </span>
-              <span className="flex items-center gap-1.5 text-green-600 font-medium">
-                <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#10B981]" />
+              <span className="flex items-center gap-1.5 text-teal-700 font-medium">
+                <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#0D9488]" />
                 フレーズ {hovered ? hovered.expression : totalExpression}
               </span>
             </div>
@@ -100,8 +100,8 @@ export function PracticeChart({ data }: { data: DataPoint[] }) {
                 <stop offset="100%" stopColor="#2563EB" stopOpacity="0.02" />
               </linearGradient>
               <linearGradient id="eGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#10B981" stopOpacity="0.3" />
-                <stop offset="100%" stopColor="#10B981" stopOpacity="0.02" />
+                <stop offset="0%" stopColor="#0D9488" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="#0D9488" stopOpacity="0.02" />
               </linearGradient>
             </defs>
 
@@ -122,7 +122,7 @@ export function PracticeChart({ data }: { data: DataPoint[] }) {
             {/* Lines */}
             <path d={gLine} fill="none" stroke="#2563EB" strokeWidth="2.5"
               strokeLinecap="round" strokeLinejoin="round" />
-            <path d={eLine} fill="none" stroke="#10B981" strokeWidth="2.5"
+            <path d={eLine} fill="none" stroke="#0D9488" strokeWidth="2.5"
               strokeLinecap="round" strokeLinejoin="round" />
 
             {/* Hover vertical line + dots */}
@@ -136,7 +136,7 @@ export function PracticeChart({ data }: { data: DataPoint[] }) {
                 <circle cx={x(hoveredIdx)} cy={y(data[hoveredIdx].grammar)}
                   r="5" fill="#2563EB" stroke="white" strokeWidth="2" />
                 <circle cx={x(hoveredIdx)} cy={y(data[hoveredIdx].expression)}
-                  r="5" fill="#10B981" stroke="white" strokeWidth="2" />
+                  r="5" fill="#0D9488" stroke="white" strokeWidth="2" />
               </>
             )}
 

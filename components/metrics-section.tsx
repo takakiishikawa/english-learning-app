@@ -121,7 +121,7 @@ export function MetricsSection({
                 {scoreDiff !== null && (
                   <p
                     className={`text-sm mt-1 flex items-center gap-0.5 ${
-                      scoreDiff >= 0 ? "text-[#10B981]" : "text-destructive"
+                      scoreDiff >= 0 ? "text-[#16A34A]" : "text-destructive"
                     }`}
                   >
                     {scoreDiff >= 0 ? (

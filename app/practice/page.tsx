@@ -35,13 +35,13 @@ export default function PracticePage() {
         </Card>
 
         <Card
-          className="cursor-pointer bg-card border hover:border-green-500 dark:hover:border-green-400 hover:shadow-md transition-all group"
+          className="cursor-pointer bg-card border hover:border-teal-500 dark:hover:border-teal-400 hover:shadow-md transition-all group"
           onClick={() => router.push("/repeating/expression")}
         >
           <CardHeader>
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-green-50 dark:bg-green-900/30 p-3 group-hover:bg-green-100 dark:group-hover:bg-green-800/40 transition-colors shrink-0">
-                <MessageSquare className="h-6 w-6 text-green-600 dark:text-green-400" />
+              <div className="rounded-lg bg-teal-50 dark:bg-teal-900/30 p-3 group-hover:bg-teal-100 dark:group-hover:bg-teal-800/40 transition-colors shrink-0">
+                <MessageSquare className="h-6 w-6 text-teal-600 dark:text-teal-400" />
               </div>
               <CardTitle className="text-xl text-foreground">フレーズ練習</CardTitle>
             </div>

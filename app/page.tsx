@@ -216,15 +216,15 @@ export default async function HomePage() {
           <LineChart
             title="リピーティング（7日間）"
             series={[
-              { key: "grammar", label: "文法", color: "#3B82F6" },
-              { key: "expression", label: "フレーズ", color: "#10B981" },
+              { key: "grammar", label: "文法", color: "#2563EB" },
+              { key: "expression", label: "フレーズ", color: "#0D9488" },
             ]}
             data={repeatingChartData}
             unit="回"
           />
           <LineChart
             title="スピーキング（7日間）"
-            series={[{ key: "count", label: "練習回数", color: "#8B5CF6" }]}
+            series={[{ key: "count", label: "練習回数", color: "#D97706" }]}
             data={speakingChartData}
             unit="回"
           />
