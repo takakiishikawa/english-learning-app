@@ -4,14 +4,15 @@ import { useEffect, useState, Suspense } from "react"
 import { useSearchParams, useParams, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
-import { Loader2, Star } from "lucide-react"
+import { Loader2, Star, ImageIcon, FileText, Sparkles, Mic, Globe, CheckCircle2, TrendingUp, BookOpen } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 
-const SCORE_LABELS = [
-  { label: "画像の描写度",    icon: "🖼️" },
-  { label: "推奨文法の使用",  icon: "📝" },
-  { label: "表現の豊かさ",    icon: "✨" },
-  { label: "流暢さ・話した量", icon: "🎙️" },
-  { label: "全体の自然さ",    icon: "🌐" },
+const SCORE_LABELS: { label: string; Icon: LucideIcon }[] = [
+  { label: "画像の描写度",    Icon: ImageIcon },
+  { label: "推奨文法の使用",  Icon: FileText  },
+  { label: "表現の豊かさ",    Icon: Sparkles  },
+  { label: "流暢さ・話した量", Icon: Mic       },
+  { label: "全体の自然さ",    Icon: Globe     },
 ]
 
 // Parse structured comment: [GOOD]...\n[UPGRADE]...\n[GRAMMAR]...
@@ -166,9 +167,9 @@ function ResultContent() {
       {/* Score breakdown */}
       <div className="rounded-xl border bg-card p-5 space-y-3">
         <p className="text-sm text-muted-foreground font-medium uppercase tracking-wide">内訳</p>
-        {SCORE_LABELS.map(({ label, icon }, i) => (
+        {SCORE_LABELS.map(({ label, Icon }, i) => (
           <div key={i} className="flex items-center gap-3">
-            <span className="text-base w-5 text-center">{icon}</span>
+            <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
             <span className="text-sm text-muted-foreground flex-1">{label}</span>
             <StarRow score={data.scores[i] ?? 0} />
             <span className="text-sm font-medium w-4 text-right tabular-nums">{data.scores[i] ?? 0}</span>
@@ -183,16 +184,25 @@ function ResultContent() {
           {sections ? (
             <div className="space-y-3 text-sm leading-relaxed">
               <div>
-                <p className="font-medium text-green-600 dark:text-green-400 mb-0.5">✓ グッドポイント</p>
-                <p className="text-foreground">{sections.goodPoint}</p>
+                <p className="flex items-center gap-1.5 font-medium text-green-600 dark:text-green-400 mb-1">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  グッドポイント
+                </p>
+                <p className="text-foreground pl-5">{sections.goodPoint}</p>
               </div>
               <div>
-                <p className="font-medium text-blue-600 dark:text-blue-400 mb-0.5">↑ アップグレード提案</p>
-                <p className="text-foreground">{sections.upgrade}</p>
+                <p className="flex items-center gap-1.5 font-medium text-blue-600 dark:text-blue-400 mb-1">
+                  <TrendingUp className="h-4 w-4 shrink-0" />
+                  アップグレード提案
+                </p>
+                <p className="text-foreground pl-5">{sections.upgrade}</p>
               </div>
               <div>
-                <p className="font-medium text-muted-foreground mb-0.5">◎ 文法について</p>
-                <p className="text-foreground">{sections.grammarNote}</p>
+                <p className="flex items-center gap-1.5 font-medium text-muted-foreground mb-1">
+                  <BookOpen className="h-4 w-4 shrink-0" />
+                  文法について
+                </p>
+                <p className="text-foreground pl-5">{sections.grammarNote}</p>
               </div>
             </div>
           ) : (

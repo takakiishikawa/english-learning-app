@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Loader2, Star } from "lucide-react"
+import { Loader2, Star, CheckCircle2, TrendingUp, BookOpen } from "lucide-react"
 import type { PastLog } from "./page"
 
 const DURATION = 30
@@ -64,9 +64,9 @@ function PastFeedbackCard({ log, index }: { log: PastLog; index: number }) {
       </div>
       {sections ? (
         <div className="space-y-1.5 text-xs leading-relaxed">
-          <p><span className="font-medium text-green-600 dark:text-green-400">✓ </span><span className="text-foreground">{sections.goodPoint}</span></p>
-          <p><span className="font-medium text-blue-600 dark:text-blue-400">↑ </span><span className="text-foreground">{sections.upgrade}</span></p>
-          <p><span className="font-medium text-muted-foreground">◎ </span><span className="text-foreground">{sections.grammarNote}</span></p>
+          <p className="flex items-start gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5 text-green-600 dark:text-green-400" /><span className="text-foreground">{sections.goodPoint}</span></p>
+          <p className="flex items-start gap-1.5"><TrendingUp className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-600 dark:text-blue-400" /><span className="text-foreground">{sections.upgrade}</span></p>
+          <p className="flex items-start gap-1.5"><BookOpen className="h-3.5 w-3.5 shrink-0 mt-0.5 text-muted-foreground" /><span className="text-foreground">{sections.grammarNote}</span></p>
         </div>
       ) : (
         <p className="text-xs text-foreground leading-relaxed">{log.comment}</p>
