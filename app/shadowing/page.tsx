@@ -5,12 +5,13 @@ import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog } from "@/components/ui/dialog"
-import { Plus, ExternalLink } from "lucide-react"
+import { Plus, ExternalLink, CheckCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import type { YoutubeChannel, YoutubeVideo } from "@/lib/types"
 
 type VideoWithLap = YoutubeVideo & { lapCount: number }
+type Filter = "all" | "todo" | "done"
 
 export default function ShadowingPage() {
   const supabase = createClient()
@@ -18,6 +19,7 @@ export default function ShadowingPage() {
   const [channels, setChannels] = useState<YoutubeChannel[]>([])
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null)
   const [videosByChannel, setVideosByChannel] = useState<Record<string, VideoWithLap[]>>({})
+  const [filter, setFilter] = useState<Filter>("all")
   const [loading, setLoading] = useState(true)
 
   const [showAddModal, setShowAddModal] = useState(false)
@@ -59,7 +61,7 @@ export default function ShadowingPage() {
 
   useEffect(() => { loadData() }, [loadData])
 
-  const handleMarkDone = async (videoId: string) => {
+  const handleMarkDone = async (videoId: string): Promise<void> => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
@@ -112,7 +114,10 @@ export default function ShadowingPage() {
         return
       }
 
-      toast.success(`「${data.channelName}」の動画${data.videoCount}本を保存しました`)
+      const msg = data.shortsSkipped > 0
+        ? `「${data.channelName}」の動画${data.videoCount}本を保存しました（ショート${data.shortsSkipped}本を除外）`
+        : `「${data.channelName}」の動画${data.videoCount}本を保存しました`
+      toast.success(msg)
       setShowAddModal(false)
       setChannelUrl("")
       await loadData()
@@ -123,13 +128,19 @@ export default function ShadowingPage() {
     }
   }
 
-  const selectedVideos = selectedChannelId ? (videosByChannel[selectedChannelId] ?? []) : []
-  const totalVideos = selectedVideos.length
-  const completedVideos = selectedVideos.filter((v) => v.lapCount > 0).length
-  const maxLap = selectedVideos.length > 0 ? Math.max(...selectedVideos.map((v) => v.lapCount)) : 0
+  const allVideos = selectedChannelId ? (videosByChannel[selectedChannelId] ?? []) : []
+  const todoCnt = allVideos.filter((v) => v.lapCount === 0).length
+  const doneCnt = allVideos.filter((v) => v.lapCount > 0).length
+
+  const filteredVideos = allVideos.filter((v) => {
+    if (filter === "todo") return v.lapCount === 0
+    if (filter === "done") return v.lapCount > 0
+    return true
+  })
 
   return (
     <div className="space-y-6 max-w-5xl">
+      {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold">シャドーイング</h1>
@@ -159,7 +170,7 @@ export default function ShadowingPage() {
                 className={cn(
                   "px-4 py-1.5 rounded-full text-sm font-medium transition-colors",
                   selectedChannelId === ch.id
-                    ? "bg-violet-600 text-white"
+                    ? "bg-primary text-primary-foreground"
                     : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700"
                 )}
               >
@@ -168,33 +179,59 @@ export default function ShadowingPage() {
             ))}
           </div>
 
-          {/* Progress summary */}
-          {totalVideos > 0 && (
-            <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <span>
-                全{totalVideos}本中{" "}
-                <strong className="text-foreground">{completedVideos}本</strong>完了
-              </span>
-              {maxLap > 0 && (
-                <span>
-                  現在<strong className="text-foreground">{maxLap}周目</strong>
+          {/* Progress bar + stats */}
+          {allVideos.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">
+                  全{allVideos.length}本中{" "}
+                  <strong className="text-foreground">{doneCnt}本</strong>完了
                 </span>
-              )}
-              <div className="flex-1 bg-neutral-200 dark:bg-neutral-700 rounded-full h-1.5 max-w-48">
+                <span className="text-muted-foreground text-xs">
+                  {Math.round((doneCnt / allVideos.length) * 100)}%
+                </span>
+              </div>
+              <div className="bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
                 <div
-                  className="bg-violet-600 h-1.5 rounded-full transition-all"
-                  style={{ width: totalVideos > 0 ? `${(completedVideos / totalVideos) * 100}%` : "0%" }}
+                  className="bg-primary h-2 rounded-full transition-all duration-500"
+                  style={{ width: `${(doneCnt / allVideos.length) * 100}%` }}
                 />
               </div>
             </div>
           )}
 
+          {/* Filter tabs */}
+          <div className="flex gap-1 border-b">
+            {(
+              [
+                { key: "all", label: `すべて (${allVideos.length})` },
+                { key: "todo", label: `未着手 (${todoCnt})` },
+                { key: "done", label: `完了済み (${doneCnt})` },
+              ] as { key: Filter; label: string }[]
+            ).map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setFilter(key)}
+                className={cn(
+                  "px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px",
+                  filter === key
+                    ? "border-primary text-primary"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
           {/* Video grid */}
-          {selectedVideos.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground text-sm">動画がありません</div>
+          {filteredVideos.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground text-sm">
+              {filter === "todo" ? "未着手の動画はありません" : filter === "done" ? "完了済みの動画はありません" : "動画がありません"}
+            </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {selectedVideos.map((video) => (
+              {filteredVideos.map((video) => (
                 <VideoCard key={video.id} video={video} onMarkDone={handleMarkDone} />
               ))}
             </div>
@@ -221,7 +258,10 @@ export default function ShadowingPage() {
               placeholder="https://www.youtube.com/@ChannelName"
               onKeyDown={(e) => { if (e.key === "Enter") handleFetchChannel() }}
             />
-            <p className="text-xs text-muted-foreground">例: https://www.youtube.com/@EnglishWithVenya</p>
+            <p className="text-xs text-muted-foreground">
+              例: https://www.youtube.com/@EnglishWithVenya<br />
+              ※ ショート動画（60秒以下）は自動的に除外されます
+            </p>
           </div>
           {fetchError && <p className="text-sm text-destructive">{fetchError}</p>}
           <Button
@@ -237,28 +277,6 @@ export default function ShadowingPage() {
   )
 }
 
-function StatusBadge({ lapCount }: { lapCount: number }) {
-  if (lapCount === 0) {
-    return (
-      <span className="inline-flex items-center rounded-full bg-neutral-100 dark:bg-neutral-800 px-2.5 py-0.5 text-xs font-medium text-neutral-500 dark:text-neutral-400">
-        未着手
-      </span>
-    )
-  }
-  if (lapCount === 1) {
-    return (
-      <span className="inline-flex items-center rounded-full bg-green-50 dark:bg-green-900/20 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:text-green-400">
-        1周完了
-      </span>
-    )
-  }
-  return (
-    <span className="inline-flex items-center rounded-full bg-violet-50 dark:bg-violet-900/20 px-2.5 py-0.5 text-xs font-medium text-violet-700 dark:text-violet-400">
-      {lapCount}周完了
-    </span>
-  )
-}
-
 function VideoCard({
   video,
   onMarkDone,
@@ -267,6 +285,7 @@ function VideoCard({
   onMarkDone: (id: string) => Promise<void>
 }) {
   const [marking, setMarking] = useState(false)
+  const isCompleted = video.lapCount > 0
 
   const handleClick = async () => {
     setMarking(true)
@@ -275,45 +294,70 @@ function VideoCard({
   }
 
   return (
-    <div className="rounded-xl border bg-card overflow-hidden shadow-sm flex flex-col">
-      {video.thumbnail_url ? (
-        <div className="aspect-video bg-neutral-100 dark:bg-neutral-800">
+    <div
+      className={cn(
+        "rounded-xl border bg-card overflow-hidden shadow-sm flex flex-col transition-all",
+        isCompleted && "border-green-300 dark:border-green-700"
+      )}
+    >
+      {/* Thumbnail */}
+      <div className="aspect-video bg-neutral-100 dark:bg-neutral-800 relative">
+        {video.thumbnail_url ? (
           <img
             src={video.thumbnail_url}
             alt={video.title}
             className="w-full h-full object-cover"
           />
-        </div>
-      ) : (
-        <div className="aspect-video bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
-          <span className="text-xs text-muted-foreground">No thumbnail</span>
-        </div>
-      )}
-      <div className="p-3 flex flex-col gap-2 flex-1">
-        <p className="text-sm font-medium line-clamp-2 leading-snug">{video.title}</p>
-        <div className="flex items-center justify-between">
-          <StatusBadge lapCount={video.lapCount} />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-xs text-muted-foreground">No thumbnail</span>
+          </div>
+        )}
+        {isCompleted && (
+          <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-green-600 px-2 py-0.5 text-white text-xs font-semibold shadow">
+            <CheckCircle className="h-3 w-3" />
+            {video.lapCount}周完了
+          </div>
+        )}
+      </div>
+
+      <div className="p-3 flex flex-col gap-3 flex-1">
+        {/* Title + duration */}
+        <div className="flex-1">
+          <p className="text-sm font-medium line-clamp-2 leading-snug">{video.title}</p>
           {video.duration && (
-            <span className="text-xs text-muted-foreground">{video.duration}</span>
+            <p className="text-xs text-muted-foreground mt-1">{video.duration}</p>
           )}
         </div>
-        <div className="flex gap-2 mt-auto pt-1">
+
+        {/* Action buttons */}
+        <div className="flex gap-2">
           <a
             href={video.video_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
+            className="flex items-center justify-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
           >
             <ExternalLink className="h-3 w-3" />
             YouTube
           </a>
-          <button
-            onClick={handleClick}
-            disabled={marking}
-            className="flex-1 rounded-md bg-violet-600 hover:bg-violet-700 text-white px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50"
-          >
-            {marking ? "記録中..." : "完了にする"}
-          </button>
+          {isCompleted ? (
+            <button
+              onClick={handleClick}
+              disabled={marking}
+              className="flex-1 rounded-md border border-green-500 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/40 text-green-700 dark:text-green-400 px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50"
+            >
+              {marking ? "記録中..." : `＋1周 (→${video.lapCount + 1}周目)`}
+            </button>
+          ) : (
+            <button
+              onClick={handleClick}
+              disabled={marking}
+              className="flex-1 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50"
+            >
+              {marking ? "記録中..." : "完了にする"}
+            </button>
+          )}
         </div>
       </div>
     </div>

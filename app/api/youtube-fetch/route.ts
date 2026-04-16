@@ -3,6 +3,24 @@ import { NextRequest, NextResponse } from "next/server"
 
 export const maxDuration = 60
 
+// ISO 8601 duration → seconds (e.g. "PT1M30S" → 90)
+function parseDurationSec(iso: string): number {
+  const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/)
+  if (!m) return 0
+  return (parseInt(m[1] ?? "0") * 3600) + (parseInt(m[2] ?? "0") * 60) + parseInt(m[3] ?? "0")
+}
+
+// ISO 8601 duration → display string (e.g. "1:30", "12:05")
+function formatDuration(iso: string): string {
+  const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/)
+  if (!m) return ""
+  const h = parseInt(m[1] ?? "0")
+  const min = parseInt(m[2] ?? "0")
+  const sec = parseInt(m[3] ?? "0")
+  if (h > 0) return `${h}:${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}`
+  return `${min}:${String(sec).padStart(2, "0")}`
+}
+
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -13,7 +31,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "channelUrl is required" }, { status: 400 })
   }
 
-  // Parse handle from URL (e.g. https://www.youtube.com/@EnglishWithVenya → EnglishWithVenya)
   const handleMatch = (channelUrl as string).match(/@([^/?\s]+)/)
   if (!handleMatch) {
     return NextResponse.json(
@@ -28,7 +45,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "YouTube API key is not configured" }, { status: 500 })
   }
 
-  // Get channel info: snippet (title) + contentDetails (uploads playlist ID)
+  // Step 1: Get channel info
   const channelRes = await fetch(
     `https://www.googleapis.com/youtube/v3/channels?part=snippet,contentDetails&forHandle=${encodeURIComponent(handle)}&key=${apiKey}`
   )
@@ -42,7 +59,7 @@ export async function POST(request: NextRequest) {
   const channelName: string = channelItem.snippet.title
   const playlistId: string = channelItem.contentDetails.relatedPlaylists.uploads
 
-  // Check for duplicate
+  // Duplicate check
   const { data: existing } = await supabase
     .from("youtube_channels")
     .select("id")
@@ -54,7 +71,65 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "このチャンネルはすでに追加されています" }, { status: 409 })
   }
 
-  // Create channel record
+  // Step 2: Fetch all playlist items (paginated)
+  type RawVideo = { videoId: string; title: string; thumbnailUrl: string | null; publishedAt: string | null }
+  const rawVideos: RawVideo[] = []
+  let pageToken: string | undefined = undefined
+
+  do {
+    const url = new URL("https://www.googleapis.com/youtube/v3/playlistItems")
+    url.searchParams.set("part", "snippet")
+    url.searchParams.set("playlistId", playlistId)
+    url.searchParams.set("maxResults", "50")
+    url.searchParams.set("key", apiKey)
+    if (pageToken) url.searchParams.set("pageToken", pageToken)
+
+    const res = await fetch(url.toString())
+    const data = await res.json()
+
+    for (const item of data.items ?? []) {
+      const videoId: string | undefined = item.snippet?.resourceId?.videoId
+      if (!videoId) continue
+      const title: string = item.snippet?.title ?? ""
+      if (title === "Deleted video" || title === "Private video") continue
+
+      rawVideos.push({
+        videoId,
+        title,
+        thumbnailUrl: item.snippet.thumbnails?.medium?.url ?? null,
+        publishedAt: item.snippet.publishedAt?.slice(0, 10) ?? null,
+      })
+    }
+
+    pageToken = data.nextPageToken
+  } while (pageToken)
+
+  // Step 3: Batch-fetch video durations (50 per request) to filter out Shorts (≤60s)
+  const durationMap = new Map<string, string>() // videoId → ISO duration
+
+  for (let i = 0; i < rawVideos.length; i += 50) {
+    const batchIds = rawVideos.slice(i, i + 50).map((v) => v.videoId).join(",")
+    const detailRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${batchIds}&key=${apiKey}`
+    )
+    const detailData = await detailRes.json()
+    for (const item of detailData.items ?? []) {
+      durationMap.set(item.id, item.contentDetails?.duration ?? "")
+    }
+  }
+
+  // Step 4: Filter shorts and build final rows
+  type VideoRow = {
+    channel_id: string
+    title: string
+    video_url: string
+    thumbnail_url: string | null
+    published_at: string | null
+    duration: string | null
+    sort_order: number
+  }
+
+  // Create channel record first
   const { data: newChannel, error: channelError } = await supabase
     .from("youtube_channels")
     .insert({ user_id: user.id, channel_name: channelName, channel_url: channelUrl })
@@ -65,48 +140,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "チャンネルの保存に失敗しました" }, { status: 500 })
   }
 
-  // Fetch all videos (paginated, 50 per page)
-  type VideoRow = {
-    channel_id: string
-    title: string
-    video_url: string
-    thumbnail_url: string | null
-    published_at: string | null
-    sort_order: number
-  }
-
   const videos: VideoRow[] = []
-  let pageToken: string | undefined = undefined
   let sortOrder = 0
 
-  do {
-    const url = new URL("https://www.googleapis.com/youtube/v3/playlistItems")
-    url.searchParams.set("part", "snippet")
-    url.searchParams.set("playlistId", playlistId)
-    url.searchParams.set("maxResults", "50")
-    url.searchParams.set("key", apiKey)
-    if (pageToken) url.searchParams.set("pageToken", pageToken)
+  for (const v of rawVideos) {
+    const isoDuration = durationMap.get(v.videoId) ?? ""
+    const sec = parseDurationSec(isoDuration)
+    // Skip Shorts: ≤60 seconds
+    if (sec > 0 && sec <= 60) continue
 
-    const videosRes = await fetch(url.toString())
-    const videosData = await videosRes.json()
-
-    for (const item of videosData.items ?? []) {
-      const videoId: string | undefined = item.snippet?.resourceId?.videoId
-      if (!videoId) continue
-      if (item.snippet?.title === "Deleted video" || item.snippet?.title === "Private video") continue
-
-      videos.push({
-        channel_id: newChannel.id,
-        title: item.snippet.title,
-        video_url: `https://www.youtube.com/watch?v=${videoId}`,
-        thumbnail_url: item.snippet.thumbnails?.medium?.url ?? null,
-        published_at: item.snippet.publishedAt?.slice(0, 10) ?? null,
-        sort_order: sortOrder++,
-      })
-    }
-
-    pageToken = videosData.nextPageToken
-  } while (pageToken)
+    videos.push({
+      channel_id: newChannel.id,
+      title: v.title,
+      video_url: `https://www.youtube.com/watch?v=${v.videoId}`,
+      thumbnail_url: v.thumbnailUrl,
+      published_at: v.publishedAt,
+      duration: isoDuration ? formatDuration(isoDuration) : null,
+      sort_order: sortOrder++,
+    })
+  }
 
   // Batch insert videos
   if (videos.length > 0) {
@@ -117,5 +169,6 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ channelName, videoCount: videos.length })
+  const skipped = rawVideos.length - videos.length
+  return NextResponse.json({ channelName, videoCount: videos.length, shortsSkipped: skipped })
 }
