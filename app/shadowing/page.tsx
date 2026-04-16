@@ -287,32 +287,43 @@ function VideoCard({
   const [marking, setMarking] = useState(false)
   const isCompleted = video.lapCount > 0
 
-  const handleClick = async () => {
+  const handleComplete = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
     setMarking(true)
     await onMarkDone(video.id)
     setMarking(false)
   }
 
   return (
-    <div
+    <a
+      href={video.video_url}
+      target="_blank"
+      rel="noopener noreferrer"
       className={cn(
-        "rounded-xl border bg-card overflow-hidden shadow-sm flex flex-col transition-all",
+        "group rounded-xl border bg-card overflow-hidden shadow-sm flex flex-col transition-all cursor-pointer",
+        "hover:shadow-md hover:-translate-y-0.5",
         isCompleted && "border-green-300 dark:border-green-700"
       )}
     >
       {/* Thumbnail */}
-      <div className="aspect-video bg-neutral-100 dark:bg-neutral-800 relative">
+      <div className="aspect-video bg-neutral-100 dark:bg-neutral-800 relative overflow-hidden">
         {video.thumbnail_url ? (
           <img
             src={video.thumbnail_url}
             alt={video.title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <span className="text-xs text-muted-foreground">No thumbnail</span>
+            <ExternalLink className="h-8 w-8 text-muted-foreground/30" />
           </div>
         )}
+        {/* Hover overlay */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 flex items-center justify-center">
+          <ExternalLink className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 drop-shadow" />
+        </div>
+        {/* Lap badge */}
         {isCompleted && (
           <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-green-600 px-2 py-0.5 text-white text-xs font-semibold shadow">
             <CheckCircle className="h-3 w-3" />
@@ -324,42 +335,33 @@ function VideoCard({
       <div className="p-3 flex flex-col gap-3 flex-1">
         {/* Title + duration */}
         <div className="flex-1">
-          <p className="text-sm font-medium line-clamp-2 leading-snug">{video.title}</p>
+          <p className="text-sm font-medium line-clamp-2 leading-snug group-hover:text-primary transition-colors">
+            {video.title}
+          </p>
           {video.duration && (
             <p className="text-xs text-muted-foreground mt-1">{video.duration}</p>
           )}
         </div>
 
-        {/* Action buttons */}
-        <div className="flex gap-2">
-          <a
-            href={video.video_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
+        {/* Complete button */}
+        {isCompleted ? (
+          <button
+            onClick={handleComplete}
+            disabled={marking}
+            className="w-full rounded-md border border-green-500 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/40 text-green-700 dark:text-green-400 px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50"
           >
-            <ExternalLink className="h-3 w-3" />
-            YouTube
-          </a>
-          {isCompleted ? (
-            <button
-              onClick={handleClick}
-              disabled={marking}
-              className="flex-1 rounded-md border border-green-500 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/40 text-green-700 dark:text-green-400 px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50"
-            >
-              {marking ? "記録中..." : `＋1周 (→${video.lapCount + 1}周目)`}
-            </button>
-          ) : (
-            <button
-              onClick={handleClick}
-              disabled={marking}
-              className="flex-1 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50"
-            >
-              {marking ? "記録中..." : "完了にする"}
-            </button>
-          )}
-        </div>
+            {marking ? "記録中..." : `＋1周 (→${video.lapCount + 1}周目)`}
+          </button>
+        ) : (
+          <button
+            onClick={handleComplete}
+            disabled={marking}
+            className="w-full rounded-md bg-primary hover:bg-primary/90 text-primary-foreground px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50"
+          >
+            {marking ? "記録中..." : "完了にする"}
+          </button>
+        )}
       </div>
-    </div>
+    </a>
   )
 }
