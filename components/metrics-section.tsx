@@ -148,7 +148,6 @@ export function MetricsSection({
           label="リピーティング"
           value={weeklyRepeating}
           unit="回"
-          sub={`文法 ${weeklyGrammar} / フレーズ ${weeklyExpression}`}
           diff={repeatingDiff}
           baseline={settings?.baseline_repeating}
           numericValue={weeklyRepeating}
@@ -165,7 +164,6 @@ export function MetricsSection({
           label="Native Camp"
           value={weeklyNativeCampCount * 25}
           unit="分"
-          sub={`${weeklyNativeCampCount}回`}
           diff={ncCountDiff !== null ? ncCountDiff * 25 : null}
           diffUnit="分"
           action={editBtn(() => setNcOpen(true))}
