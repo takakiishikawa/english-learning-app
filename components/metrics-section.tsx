@@ -64,7 +64,6 @@ function MetricCard({
   diffUnit,
   action,
   baseline,
-  baselineUnit,
   numericValue,
 }: {
   label: string
