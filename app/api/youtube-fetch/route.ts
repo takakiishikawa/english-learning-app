@@ -26,7 +26,8 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const { channelUrl } = await request.json()
+  const body = await request.json()
+  const { channelUrl, sinceYear } = body as { channelUrl: string; sinceYear?: number }
   if (!channelUrl) {
     return NextResponse.json({ error: "channelUrl is required" }, { status: 400 })
   }
@@ -116,6 +117,15 @@ export async function POST(request: NextRequest) {
     for (const item of detailData.items ?? []) {
       durationMap.set(item.id, item.contentDetails?.duration ?? "")
     }
+  }
+
+  // Step 3.5: Filter by sinceYear if provided
+  if (sinceYear && sinceYear > 1990) {
+    const cutoff = String(sinceYear)
+    rawVideos.splice(0, rawVideos.length, ...rawVideos.filter((v) => {
+      if (!v.publishedAt) return true
+      return v.publishedAt.slice(0, 4) >= cutoff
+    }))
   }
 
   // Step 4: Filter shorts and build final rows

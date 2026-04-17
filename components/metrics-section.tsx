@@ -127,8 +127,9 @@ export function MetricsSection({
         <MetricCard
           label="シャドーイング"
           value={weeklyShadowing}
-          unit="本"
+          unit="分"
           diff={shadowingDiff}
+          diffUnit="分"
         />
         <div className="rounded-[8px] bg-muted px-4 py-3.5">
           <div className="flex items-center justify-between mb-2">

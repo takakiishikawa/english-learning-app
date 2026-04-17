@@ -73,7 +73,7 @@ export default async function HomePage() {
       supabase.from("speaking_logs").select("grammar_id"),
       supabase
         .from("youtube_logs")
-        .select("completed_at")
+        .select("completed_at, youtube_videos(duration)")
         .gte("completed_at", new Date(new Date(prev14Start).setHours(0, 0, 0, 0)).toISOString())
         .lte("completed_at", new Date(new Date(today).setHours(23, 59, 59, 999)).toISOString()),
     ])
@@ -163,14 +163,23 @@ export default async function HomePage() {
   const latestScore = sortedScores.length > 0 ? sortedScores[0].score : null
   const scoreDiff = sortedScores.length >= 2 ? sortedScores[0].score - sortedScores[1].score : null
 
-  // Youtube logs: split into curr / prev 7 days
+  // Youtube logs: split into curr / prev 7 days (sum minutes)
+  function parseDurToMin(dur: string | null | undefined): number {
+    if (!dur) return 0
+    const parts = dur.split(":").map(Number)
+    if (parts.length === 3) return parts[0] * 60 + parts[1]
+    if (parts.length === 2) return parts[0]
+    return 0
+  }
   const allYoutubeLogs = allYoutubeLogsResult.data ?? []
   const ytByDate = new Map<string, number>()
   const prevYtByDate = new Map<string, number>()
   for (const yt of allYoutubeLogs) {
     const dateStr = yt.completed_at.slice(0, 10)
+    const dur = (yt.youtube_videos as unknown as { duration: string | null } | null)?.duration
+    const min = parseDurToMin(dur)
     const target = dateStr >= rangeStartStr ? ytByDate : prevYtByDate
-    target.set(dateStr, (target.get(dateStr) ?? 0) + 1)
+    target.set(dateStr, (target.get(dateStr) ?? 0) + min)
   }
   const weeklyShadowing = [...ytByDate.values()].reduce((s, c) => s + c, 0)
   const prevWeeklyShadowing = [...prevYtByDate.values()].reduce((s, c) => s + c, 0)
@@ -203,7 +212,7 @@ export default async function HomePage() {
 
   const shadowingChartData: LineChartPoint[] = days.map(({ str, label }) => ({
     label,
-    count: ytByDate.get(str) ?? 0,
+    minutes: ytByDate.get(str) ?? 0,
   }))
 
   return (
@@ -270,9 +279,9 @@ export default async function HomePage() {
           />
           <LineChart
             title="シャドーイング（7日間）"
-            series={[{ key: "count", label: "完了本数", color: COLORS.shadowing.main }]}
+            series={[{ key: "minutes", label: "視聴時間", color: COLORS.shadowing.main }]}
             data={shadowingChartData}
-            unit="本"
+            unit="分"
           />
           <LineChart
             title="NC AI Speaking Test スコア"

@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog } from "@/components/ui/dialog"
-import { Plus, ExternalLink, CheckCircle } from "lucide-react"
+import { Plus, ExternalLink, CheckCircle, Archive, ArchiveRestore, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import type { YoutubeChannel, YoutubeVideo } from "@/lib/types"
@@ -21,9 +21,11 @@ export default function ShadowingPage() {
   const [videosByChannel, setVideosByChannel] = useState<Record<string, VideoWithLap[]>>({})
   const [filter, setFilter] = useState<Filter>("all")
   const [loading, setLoading] = useState(true)
+  const [showArchived, setShowArchived] = useState(false)
 
   const [showAddModal, setShowAddModal] = useState(false)
   const [channelUrl, setChannelUrl] = useState("")
+  const [sinceYear, setSinceYear] = useState("")
   const [fetching, setFetching] = useState(false)
   const [fetchError, setFetchError] = useState("")
 
@@ -55,7 +57,11 @@ export default function ShadowingPage() {
 
     setChannels(chList)
     setVideosByChannel(byChannel)
-    setSelectedChannelId((prev) => prev ?? (chList[0]?.id ?? null))
+    setSelectedChannelId((prev) => {
+      if (prev) return prev
+      const active = chList.find((c) => !c.archived)
+      return active?.id ?? null
+    })
     setLoading(false)
   }, [supabase])
 
@@ -96,16 +102,41 @@ export default function ShadowingPage() {
     })
   }
 
+  const handleArchiveChannel = async (channelId: string, archive: boolean) => {
+    const { error } = await supabase
+      .from("youtube_channels")
+      .update({ archived: archive })
+      .eq("id", channelId)
+
+    if (error) {
+      toast.error("操作に失敗しました")
+      return
+    }
+
+    toast.success(archive ? "アーカイブしました" : "アーカイブを解除しました")
+    setChannels((prev) =>
+      prev.map((c) => c.id === channelId ? { ...c, archived: archive } : c)
+    )
+    if (archive && selectedChannelId === channelId) {
+      const next = channels.find((c) => !c.archived && c.id !== channelId)
+      setSelectedChannelId(next?.id ?? null)
+    }
+  }
+
   const handleFetchChannel = async () => {
     if (!channelUrl.trim()) return
     setFetching(true)
     setFetchError("")
 
     try {
+      const body: Record<string, string | number> = { channelUrl: channelUrl.trim() }
+      const yr = parseInt(sinceYear)
+      if (!isNaN(yr) && yr > 1990) body.sinceYear = yr
+
       const res = await fetch("/api/youtube-fetch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ channelUrl: channelUrl.trim() }),
+        body: JSON.stringify(body),
       })
       const data = await res.json()
 
@@ -120,6 +151,7 @@ export default function ShadowingPage() {
       toast.success(msg)
       setShowAddModal(false)
       setChannelUrl("")
+      setSinceYear("")
       await loadData()
     } catch {
       setFetchError("ネットワークエラーが発生しました")
@@ -127,6 +159,9 @@ export default function ShadowingPage() {
       setFetching(false)
     }
   }
+
+  const activeChannels = channels.filter((c) => !c.archived)
+  const archivedChannels = channels.filter((c) => c.archived)
 
   const allVideos = selectedChannelId ? (videosByChannel[selectedChannelId] ?? []) : []
   const todoCnt = allVideos.filter((v) => v.lapCount === 0).length
@@ -137,6 +172,8 @@ export default function ShadowingPage() {
     if (filter === "done") return v.lapCount > 0
     return true
   })
+
+  const selectedChannel = channels.find((c) => c.id === selectedChannelId)
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -154,87 +191,154 @@ export default function ShadowingPage() {
 
       {loading ? (
         <div className="text-muted-foreground text-sm">読み込み中...</div>
-      ) : channels.length === 0 ? (
+      ) : activeChannels.length === 0 && archivedChannels.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
           <p className="font-medium">チャンネルが登録されていません</p>
           <p className="text-sm mt-1">「チャンネルを追加」からYouTubeチャンネルを登録してください</p>
         </div>
       ) : (
         <>
-          {/* Channel tabs */}
-          <div className="flex gap-2 flex-wrap">
-            {channels.map((ch) => (
-              <button
-                key={ch.id}
-                onClick={() => setSelectedChannelId(ch.id)}
-                className={cn(
-                  "px-4 py-1.5 rounded-full text-sm font-medium transition-colors",
-                  selectedChannelId === ch.id
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                )}
-              >
-                {ch.channel_name}
-              </button>
-            ))}
-          </div>
-
-          {/* Progress bar + stats */}
-          {allVideos.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">
-                  全{allVideos.length}本中{" "}
-                  <strong className="text-foreground">{doneCnt}本</strong>完了
-                </span>
-                <span className="text-muted-foreground text-xs">
-                  {Math.round((doneCnt / allVideos.length) * 100)}%
-                </span>
-              </div>
-              <div className="bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
-                <div
-                  className="bg-primary h-2 rounded-full transition-all duration-500"
-                  style={{ width: `${(doneCnt / allVideos.length) * 100}%` }}
-                />
-              </div>
+          {/* Active channel tabs */}
+          {activeChannels.length > 0 && (
+            <div className="flex gap-2 flex-wrap items-center">
+              {activeChannels.map((ch) => (
+                <div key={ch.id} className="group relative flex items-center">
+                  <button
+                    onClick={() => setSelectedChannelId(ch.id)}
+                    className={cn(
+                      "pl-4 pr-8 py-1.5 rounded-full text-sm font-medium transition-colors",
+                      selectedChannelId === ch.id
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                    )}
+                  >
+                    {ch.channel_name}
+                  </button>
+                  <button
+                    onClick={() => handleArchiveChannel(ch.id, true)}
+                    title="アーカイブ"
+                    className={cn(
+                      "absolute right-2 p-0.5 rounded transition-opacity",
+                      selectedChannelId === ch.id
+                        ? "opacity-60 hover:opacity-100 text-primary-foreground"
+                        : "opacity-0 group-hover:opacity-60 hover:!opacity-100 text-neutral-500"
+                    )}
+                  >
+                    <Archive className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
             </div>
           )}
 
-          {/* Filter tabs */}
-          <div className="flex gap-1 border-b">
-            {(
-              [
-                { key: "all", label: `すべて (${allVideos.length})` },
-                { key: "todo", label: `未着手 (${todoCnt})` },
-                { key: "done", label: `完了済み (${doneCnt})` },
-              ] as { key: Filter; label: string }[]
-            ).map(({ key, label }) => (
+          {/* Archived channels toggle */}
+          {archivedChannels.length > 0 && (
+            <div className="space-y-2">
               <button
-                key={key}
-                onClick={() => setFilter(key)}
-                className={cn(
-                  "px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px",
-                  filter === key
-                    ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                )}
+                onClick={() => setShowArchived((v) => !v)}
+                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
-                {label}
+                <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", showArchived && "rotate-180")} />
+                アーカイブ済み ({archivedChannels.length})
               </button>
-            ))}
-          </div>
+              {showArchived && (
+                <div className="flex gap-2 flex-wrap items-center">
+                  {archivedChannels.map((ch) => (
+                    <div key={ch.id} className="group relative flex items-center">
+                      <button
+                        onClick={() => setSelectedChannelId(ch.id)}
+                        className={cn(
+                          "pl-4 pr-8 py-1.5 rounded-full text-sm font-medium transition-colors opacity-60",
+                          selectedChannelId === ch.id
+                            ? "bg-primary text-primary-foreground opacity-100"
+                            : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400"
+                        )}
+                      >
+                        {ch.channel_name}
+                      </button>
+                      <button
+                        onClick={() => handleArchiveChannel(ch.id, false)}
+                        title="アーカイブ解除"
+                        className="absolute right-2 p-0.5 rounded opacity-0 group-hover:opacity-60 hover:!opacity-100 text-neutral-500 transition-opacity"
+                      >
+                        <ArchiveRestore className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
-          {/* Video grid */}
-          {filteredVideos.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground text-sm">
-              {filter === "todo" ? "未着手の動画はありません" : filter === "done" ? "完了済みの動画はありません" : "動画がありません"}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredVideos.map((video) => (
-                <VideoCard key={video.id} video={video} onMarkDone={handleMarkDone} />
-              ))}
-            </div>
+          {/* Content for selected channel */}
+          {selectedChannelId && (
+            <>
+              {/* Archive notice for archived channel */}
+              {selectedChannel?.archived && (
+                <div className="flex items-center gap-2 rounded-[8px] bg-muted px-4 py-2.5 text-xs text-muted-foreground">
+                  <Archive className="h-3.5 w-3.5 shrink-0" />
+                  このチャンネルはアーカイブ済みです
+                </div>
+              )}
+
+              {/* Progress bar + stats */}
+              {allVideos.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      全{allVideos.length}本中{" "}
+                      <strong className="text-foreground">{doneCnt}本</strong>完了
+                    </span>
+                    <span className="text-muted-foreground text-xs">
+                      {Math.round((doneCnt / allVideos.length) * 100)}%
+                    </span>
+                  </div>
+                  <div className="bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+                    <div
+                      className="bg-primary h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${(doneCnt / allVideos.length) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Filter tabs */}
+              <div className="flex gap-1 border-b">
+                {(
+                  [
+                    { key: "all", label: `すべて (${allVideos.length})` },
+                    { key: "todo", label: `未着手 (${todoCnt})` },
+                    { key: "done", label: `完了済み (${doneCnt})` },
+                  ] as { key: Filter; label: string }[]
+                ).map(({ key, label }) => (
+                  <button
+                    key={key}
+                    onClick={() => setFilter(key)}
+                    className={cn(
+                      "px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px",
+                      filter === key
+                        ? "border-primary text-primary"
+                        : "border-transparent text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Video grid */}
+              {filteredVideos.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground text-sm">
+                  {filter === "todo" ? "未着手の動画はありません" : filter === "done" ? "完了済みの動画はありません" : "動画がありません"}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredVideos.map((video) => (
+                    <VideoCard key={video.id} video={video} onMarkDone={handleMarkDone} />
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </>
       )}
@@ -245,6 +349,7 @@ export default function ShadowingPage() {
         onClose={() => {
           setShowAddModal(false)
           setChannelUrl("")
+          setSinceYear("")
           setFetchError("")
         }}
         title="チャンネルを追加"
@@ -261,6 +366,18 @@ export default function ShadowingPage() {
             <p className="text-xs text-muted-foreground">
               例: https://www.youtube.com/@EnglishWithVenya<br />
               ※ 3分未満の動画は自動的に除外されます
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">取得開始年（任意）</label>
+            <Input
+              value={sinceYear}
+              onChange={(e) => setSinceYear(e.target.value)}
+              placeholder="例: 2020"
+              maxLength={4}
+            />
+            <p className="text-xs text-muted-foreground">
+              入力した年以降の動画のみ取得します
             </p>
           </div>
           {fetchError && <p className="text-sm text-destructive">{fetchError}</p>}

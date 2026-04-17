@@ -20,6 +20,15 @@ type NcLog = {
 
 type YoutubeLog = {
   completed_at: string
+  youtube_videos: { duration: string | null } | null
+}
+
+function parseDurToMin(dur: string | null | undefined): number {
+  if (!dur) return 0
+  const parts = dur.split(":").map(Number)
+  if (parts.length === 3) return parts[0] * 60 + parts[1]
+  if (parts.length === 2) return parts[0]
+  return 0
 }
 
 function fmtMonth(ym: string): string {
@@ -75,12 +84,18 @@ function buildAllTimeData(logs: PracticeLog[], ncLogs: NcLog[]): {
 function buildShadowingData(youtubeLogs: YoutubeLog[], mode: "monthly" | "alltime"): LineChartPoint[] {
   if (mode === "monthly") {
     const map = new Map<string, number>()
-    for (const l of youtubeLogs) { const ym = l.completed_at.slice(0, 7); map.set(ym, (map.get(ym) ?? 0) + 1) }
-    return [...map.keys()].sort().map((ym) => ({ label: fmtMonth(ym), count: map.get(ym) ?? 0 }))
+    for (const l of youtubeLogs) {
+      const ym = l.completed_at.slice(0, 7)
+      map.set(ym, (map.get(ym) ?? 0) + parseDurToMin(l.youtube_videos?.duration))
+    }
+    return [...map.keys()].sort().map((ym) => ({ label: fmtMonth(ym), minutes: map.get(ym) ?? 0 }))
   }
   const map = new Map<string, number>()
-  for (const l of youtubeLogs) { const d = l.completed_at.slice(0, 10); map.set(d, (map.get(d) ?? 0) + 1) }
-  return [...map.keys()].sort().map((d) => ({ label: fmtDate(d), count: map.get(d) ?? 0 }))
+  for (const l of youtubeLogs) {
+    const d = l.completed_at.slice(0, 10)
+    map.set(d, (map.get(d) ?? 0) + parseDurToMin(l.youtube_videos?.duration))
+  }
+  return [...map.keys()].sort().map((d) => ({ label: fmtDate(d), minutes: map.get(d) ?? 0 }))
 }
 
 const repeatingSeries: LineChartSeries[] = [
@@ -94,7 +109,7 @@ const ncSeries: LineChartSeries[] = [
   { key: "minutes", label: "学習時間", color: COLORS.grammar.main },
 ]
 const shadowingSeries: LineChartSeries[] = [
-  { key: "count", label: "完了本数", color: COLORS.shadowing.main },
+  { key: "minutes", label: "視聴時間", color: COLORS.shadowing.main },
 ]
 
 export function ReportCharts({ logs, ncLogs, youtubeLogs }: { logs: PracticeLog[]; ncLogs: NcLog[]; youtubeLogs: YoutubeLog[] }) {
@@ -114,7 +129,7 @@ export function ReportCharts({ logs, ncLogs, youtubeLogs }: { logs: PracticeLog[
         <LineChart title="リピーティング" series={repeatingSeries} data={data.repeating} unit="回" />
         <LineChart title="スピーキング" series={speakingSeries} data={data.speaking} unit="回" />
         <LineChart title="Native Camp 学習時間" series={ncSeries} data={data.nativeCamp} unit="分" />
-        <LineChart title="シャドーイング 完了本数" series={shadowingSeries} data={shadowingData} unit="本" />
+        <LineChart title="シャドーイング 視聴時間" series={shadowingSeries} data={shadowingData} unit="分" />
       </TabsContent>
     </Tabs>
   )

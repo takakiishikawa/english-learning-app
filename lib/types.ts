@@ -77,6 +77,7 @@ export interface YoutubeChannel {
   user_id: string
   channel_name: string
   channel_url: string
+  archived: boolean
   created_at: string
 }
 

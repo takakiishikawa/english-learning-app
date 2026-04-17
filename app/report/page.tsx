@@ -14,7 +14,7 @@ export default async function ReportPage() {
       .order("logged_at"),
     supabase
       .from("youtube_logs")
-      .select("completed_at")
+      .select("completed_at, youtube_videos(duration)")
       .order("completed_at"),
   ])
 
@@ -33,6 +33,7 @@ export default async function ReportPage() {
 
   const youtubeLogs = (youtubeLogsResult.data ?? []).map((l) => ({
     completed_at: l.completed_at,
+    youtube_videos: (l.youtube_videos as unknown as { duration: string | null } | null) ?? null,
   }))
 
   return (
