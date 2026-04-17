@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { LineChart, type LineChartPoint, type LineChartSeries } from "@/components/line-chart"
-import { COLORS } from "@/lib/colors"
 
 type PracticeLog = {
   practiced_at: string
@@ -99,17 +98,17 @@ function buildShadowingData(youtubeLogs: YoutubeLog[], mode: "monthly" | "alltim
 }
 
 const repeatingSeries: LineChartSeries[] = [
-  { key: "grammar",    label: "文法",     color: COLORS.grammar.main },
-  { key: "expression", label: "フレーズ", color: COLORS.phrase.main },
+  { key: "grammar",    label: "文法",     color: "#5B6AF0" },
+  { key: "expression", label: "フレーズ", color: "#A5B4FC" },
 ]
 const speakingSeries: LineChartSeries[] = [
-  { key: "speaking", label: "スピーキング", color: COLORS.speaking.main },
+  { key: "speaking", label: "スピーキング", color: "#5B6AF0" },
 ]
 const ncSeries: LineChartSeries[] = [
-  { key: "minutes", label: "学習時間", color: COLORS.grammar.main },
+  { key: "minutes", label: "学習時間", color: "#5B6AF0" },
 ]
 const shadowingSeries: LineChartSeries[] = [
-  { key: "minutes", label: "視聴時間", color: COLORS.shadowing.main },
+  { key: "minutes", label: "視聴時間", color: "#5B6AF0" },
 ]
 
 export function ReportCharts({ logs, ncLogs, youtubeLogs }: { logs: PracticeLog[]; ncLogs: NcLog[]; youtubeLogs: YoutubeLog[] }) {

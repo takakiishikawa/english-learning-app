@@ -23,27 +23,34 @@ function CustomTooltip({
   payload,
   unit,
   series,
+  dailyBaseline,
 }: {
   active?: boolean
   payload?: TooltipEntry[]
   unit: string
   series: LineChartSeries[]
+  dailyBaseline?: number
 }) {
   if (!active || !payload?.length) return null
   return (
     <div
-      className="rounded-[6px] border px-3 py-2 text-xs shadow-md"
+      className="rounded-[6px] border px-3 py-2 text-xs shadow-md space-y-0.5"
       style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
     >
       {series.map((s) => {
         const entry = payload.find((p) => p.dataKey === s.key)
         if (!entry) return null
         return (
-          <p key={s.key} style={{ color: s.color }}>
+          <p key={s.key}>
             {s.label}: <strong>{entry.value ?? 0}{unit}</strong>
           </p>
         )
       })}
+      {dailyBaseline != null && (
+        <p style={{ color: "var(--text-tertiary, #A0A09D)" }} className="pt-1 border-t border-[var(--border)]">
+          ベースライン: {dailyBaseline}{unit}/日
+        </p>
+      )}
     </div>
   )
 }
@@ -109,13 +116,6 @@ export function LineChart({
                   stroke="var(--text-tertiary, #A0A09D)"
                   strokeDasharray="3 3"
                   strokeWidth={1}
-                  label={{
-                    value: `目標 ${dailyBaseline}${unit}/日`,
-                    position: "insideTopLeft",
-                    fontSize: 9,
-                    fill: "var(--text-tertiary, #A0A09D)",
-                    dy: -4,
-                  }}
                 />
               )}
               <XAxis
@@ -132,6 +132,7 @@ export function LineChart({
                     payload={props.payload as unknown as TooltipEntry[] | undefined}
                     unit={unit}
                     series={series}
+                    dailyBaseline={dailyBaseline}
                   />
                 )}
                 cursor={{ stroke: "var(--border)", strokeWidth: 1 }}

@@ -5,7 +5,6 @@ import { LineChart, type LineChartPoint } from "@/components/line-chart"
 import { DashboardAutoCheck } from "@/components/dashboard-auto-check"
 import { SpeakingTestReminder } from "@/components/speaking-test-reminder"
 import { StreakPopup } from "@/components/streak-popup"
-import { COLORS } from "@/lib/colors"
 import type { SpeakingScore } from "@/lib/types"
 
 function calculateStreak(dates: string[]): number {
@@ -272,8 +271,8 @@ export default async function HomePage() {
           <LineChart
             title="リピーティング（7日間）"
             series={[
-              { key: "grammar",    label: "文法",     color: COLORS.grammar.main },
-              { key: "expression", label: "フレーズ", color: COLORS.phrase.main },
+              { key: "grammar",    label: "文法",     color: "#5B6AF0" },
+              { key: "expression", label: "フレーズ", color: "#A5B4FC" },
             ]}
             data={repeatingChartData}
             unit="回"
@@ -281,28 +280,28 @@ export default async function HomePage() {
           />
           <LineChart
             title="スピーキング（7日間）"
-            series={[{ key: "count", label: "練習回数", color: COLORS.speaking.main }]}
+            series={[{ key: "count", label: "練習回数", color: "#5B6AF0" }]}
             data={speakingChartData}
             unit="回"
             dailyBaseline={settings ? Math.round(settings.baseline_speaking / 7) : undefined}
           />
           <LineChart
             title="Native Camp（7日間）"
-            series={[{ key: "minutes", label: "学習時間", color: COLORS.grammar.main }]}
+            series={[{ key: "minutes", label: "学習時間", color: "#5B6AF0" }]}
             data={ncChartData}
             unit="分"
             dailyBaseline={settings ? Math.round(settings.baseline_nativecamp / 7) : undefined}
           />
           <LineChart
             title="シャドーイング（7日間）"
-            series={[{ key: "minutes", label: "視聴時間", color: COLORS.shadowing.main }]}
+            series={[{ key: "minutes", label: "視聴時間", color: "#5B6AF0" }]}
             data={shadowingChartData}
             unit="分"
             dailyBaseline={settings ? Math.round(settings.baseline_shadowing / 7) : undefined}
           />
           <LineChart
             title="NC AI Speaking Test スコア"
-            series={[{ key: "score", label: "スコア", color: COLORS.speaking.main }]}
+            series={[{ key: "score", label: "スコア", color: "#5B6AF0" }]}
             data={scoreChartData}
             unit="点"
             emptyText="スコアを記録するとグラフが表示されます"
