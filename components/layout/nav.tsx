@@ -18,12 +18,24 @@ import {
   MicrophoneIcon,
   SpeakerWaveIcon,
   Cog6ToothIcon,
+  ChevronUpDownIcon,
 } from "@heroicons/react/24/outline"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog } from "@/components/ui/dialog"
+
+const GO_APPS = [
+  { name: "NativeGo",   url: "https://english-learning-app-black.vercel.app/",  color: "#E5484D" },
+  { name: "CareGo",     url: "https://care-go-mu.vercel.app/dashboard",         color: "#30A46C" },
+  { name: "KenyakuGo",  url: "https://kenyaku-go.vercel.app/",                  color: "#F5A623" },
+  { name: "TaskGo",     url: "https://taskgo-dun.vercel.app/",                  color: "#5E6AD2" },
+  { name: "CookGo",     url: "https://cook-go-lovat.vercel.app/dashboard",      color: "#1AD1A5" },
+  { name: "PhysicalGo", url: "https://physical-go.vercel.app/dashboard",        color: "#FF6B6B" },
+] as const
+
+const CURRENT_APP = "NativeGo"
 
 const navItems = [
   { href: "/", label: "ホーム", icon: HomeIcon },
@@ -76,6 +88,8 @@ export function Nav() {
   const [saving, setSaving] = useState(false)
   const [uploadError, setUploadError] = useState("")
   const [isDark, setIsDark] = useState(false)
+  const [appsOpen, setAppsOpen] = useState(false)
+  const appsRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -89,6 +103,16 @@ export function Nav() {
     obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] })
     return () => obs.disconnect()
   }, [])
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (appsRef.current && !appsRef.current.contains(e.target as Node)) {
+        setAppsOpen(false)
+      }
+    }
+    if (appsOpen) document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [appsOpen])
 
   function toggleTheme() {
     const next = isDark ? "light" : "dark"
@@ -231,6 +255,46 @@ export function Nav() {
             }
             {isDark ? "ダーク" : "ライト"}
           </button>
+
+          {/* App switcher */}
+          <div ref={appsRef} className="relative">
+            <button
+              onClick={() => setAppsOpen((v) => !v)}
+              className="flex items-center gap-2.5 rounded-[6px] px-2 py-1.5 text-[15px] font-medium text-[var(--text-secondary)] hover:bg-muted/60 hover:text-foreground transition-colors h-8 w-full"
+            >
+              <span className="inline-block w-4 h-4 shrink-0 flex items-center justify-center opacity-60">
+                <span className="inline-block w-2 h-2 rounded-full bg-[#E5484D]" />
+              </span>
+              <span className="flex-1 text-left">Apps</span>
+              <ChevronUpDownIcon className="h-3.5 w-3.5 shrink-0 opacity-40" />
+            </button>
+            {appsOpen && (
+              <div className="absolute bottom-full left-0 right-0 mb-1 rounded-[8px] border border-[var(--border)] bg-card shadow-lg py-1 z-50">
+                {GO_APPS.map((app) => {
+                  const isCurrent = app.name === CURRENT_APP
+                  return isCurrent ? (
+                    <div
+                      key={app.name}
+                      className="flex items-center gap-2.5 px-3 py-1.5 text-[14px] font-medium bg-muted text-foreground cursor-default"
+                    >
+                      <span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ background: app.color }} />
+                      {app.name}
+                    </div>
+                  ) : (
+                    <a
+                      key={app.name}
+                      href={app.url}
+                      className="flex items-center gap-2.5 px-3 py-1.5 text-[14px] text-[var(--text-secondary)] hover:bg-muted/60 hover:text-foreground transition-colors"
+                      onClick={() => setAppsOpen(false)}
+                    >
+                      <span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ background: app.color }} />
+                      {app.name}
+                    </a>
+                  )
+                })}
+              </div>
+            )}
+          </div>
 
           {/* Logout */}
           <button
