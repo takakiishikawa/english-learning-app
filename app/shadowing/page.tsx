@@ -5,13 +5,13 @@ import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog } from "@/components/ui/dialog"
-import { Plus, ExternalLink, CheckCircle, Archive, ArchiveRestore, ChevronDown } from "lucide-react"
+import { Plus, ExternalLink, CheckCircle, Archive, ArchiveRestore, ChevronDown, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import type { YoutubeChannel, YoutubeVideo } from "@/lib/types"
 
 type VideoWithLap = YoutubeVideo & { lapCount: number }
-type Filter = "all" | "todo" | "done"
+type Filter = "todo" | "done"
 
 export default function ShadowingPage() {
   const supabase = createClient()
@@ -19,7 +19,7 @@ export default function ShadowingPage() {
   const [channels, setChannels] = useState<YoutubeChannel[]>([])
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null)
   const [videosByChannel, setVideosByChannel] = useState<Record<string, VideoWithLap[]>>({})
-  const [filter, setFilter] = useState<Filter>("all")
+  const [filter, setFilter] = useState<Filter>("todo")
   const [loading, setLoading] = useState(true)
   const [showArchived, setShowArchived] = useState(false)
 
@@ -102,6 +102,25 @@ export default function ShadowingPage() {
     })
   }
 
+  const handleDeleteVideo = async (videoId: string): Promise<void> => {
+    await supabase.from("youtube_logs").delete().eq("video_id", videoId)
+    const { error } = await supabase.from("youtube_videos").delete().eq("id", videoId)
+
+    if (error) {
+      toast.error("削除に失敗しました")
+      return
+    }
+
+    toast.success("動画を削除しました")
+    setVideosByChannel((prev) => {
+      const updated: Record<string, VideoWithLap[]> = {}
+      for (const cId in prev) {
+        updated[cId] = prev[cId].filter((v) => v.id !== videoId)
+      }
+      return updated
+    })
+  }
+
   const handleArchiveChannel = async (channelId: string, archive: boolean) => {
     const { error } = await supabase
       .from("youtube_channels")
@@ -166,12 +185,11 @@ export default function ShadowingPage() {
   const allVideos = selectedChannelId ? (videosByChannel[selectedChannelId] ?? []) : []
   const todoCnt = allVideos.filter((v) => v.lapCount === 0).length
   const doneCnt = allVideos.filter((v) => v.lapCount > 0).length
+  const pct = allVideos.length > 0 ? Math.round((doneCnt / allVideos.length) * 100) : 0
 
-  const filteredVideos = allVideos.filter((v) => {
-    if (filter === "todo") return v.lapCount === 0
-    if (filter === "done") return v.lapCount > 0
-    return true
-  })
+  const filteredVideos = allVideos.filter((v) =>
+    filter === "todo" ? v.lapCount === 0 : v.lapCount > 0
+  )
 
   const selectedChannel = channels.find((c) => c.id === selectedChannelId)
 
@@ -273,7 +291,7 @@ export default function ShadowingPage() {
           {/* Content for selected channel */}
           {selectedChannelId && (
             <>
-              {/* Archive notice for archived channel */}
+              {/* Archive notice */}
               {selectedChannel?.archived && (
                 <div className="flex items-center gap-2 rounded-[8px] bg-muted px-4 py-2.5 text-xs text-muted-foreground">
                   <Archive className="h-3.5 w-3.5 shrink-0" />
@@ -281,24 +299,18 @@ export default function ShadowingPage() {
                 </div>
               )}
 
-              {/* Progress bar + stats */}
+              {/* Progress */}
               {allVideos.length > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      全{allVideos.length}本中{" "}
-                      <strong className="text-foreground">{doneCnt}本</strong>完了
-                    </span>
-                    <span className="text-muted-foreground text-xs">
-                      {Math.round((doneCnt / allVideos.length) * 100)}%
-                    </span>
-                  </div>
-                  <div className="bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 bg-neutral-200 dark:bg-neutral-700 rounded-full h-1.5">
                     <div
-                      className="bg-primary h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${(doneCnt / allVideos.length) * 100}%` }}
+                      className="bg-primary h-1.5 rounded-full transition-all duration-500"
+                      style={{ width: `${pct}%` }}
                     />
                   </div>
+                  <span className="text-xs text-muted-foreground tabular-nums shrink-0">
+                    {doneCnt} / {allVideos.length} クリア
+                  </span>
                 </div>
               )}
 
@@ -306,9 +318,8 @@ export default function ShadowingPage() {
               <div className="flex gap-1 border-b">
                 {(
                   [
-                    { key: "all", label: `すべて (${allVideos.length})` },
-                    { key: "todo", label: `未着手 (${todoCnt})` },
-                    { key: "done", label: `完了済み (${doneCnt})` },
+                    { key: "todo", label: `これから (${todoCnt})` },
+                    { key: "done", label: `クリア (${doneCnt})` },
                   ] as { key: Filter; label: string }[]
                 ).map(({ key, label }) => (
                   <button
@@ -329,12 +340,17 @@ export default function ShadowingPage() {
               {/* Video grid */}
               {filteredVideos.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground text-sm">
-                  {filter === "todo" ? "未着手の動画はありません" : filter === "done" ? "完了済みの動画はありません" : "動画がありません"}
+                  {filter === "todo" ? "全部クリアしました！" : "まだクリアした動画がありません"}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredVideos.map((video) => (
-                    <VideoCard key={video.id} video={video} onMarkDone={handleMarkDone} />
+                    <VideoCard
+                      key={video.id}
+                      video={video}
+                      onMarkDone={handleMarkDone}
+                      onDelete={handleDeleteVideo}
+                    />
                   ))}
                 </div>
               )}
@@ -397,11 +413,14 @@ export default function ShadowingPage() {
 function VideoCard({
   video,
   onMarkDone,
+  onDelete,
 }: {
   video: VideoWithLap
   onMarkDone: (id: string) => Promise<void>
+  onDelete: (id: string) => Promise<void>
 }) {
   const [marking, setMarking] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const isCompleted = video.lapCount > 0
 
   const handleComplete = async (e: React.MouseEvent) => {
@@ -410,6 +429,14 @@ function VideoCard({
     setMarking(true)
     await onMarkDone(video.id)
     setMarking(false)
+  }
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDeleting(true)
+    await onDelete(video.id)
+    setDeleting(false)
   }
 
   return (
@@ -441,11 +468,19 @@ function VideoCard({
             <CheckCircle className="h-6 w-6 text-white drop-shadow" />
           </div>
         ) : (
-          /* Hover overlay (未完了のみ) */
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 flex items-center justify-center">
             <ExternalLink className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 drop-shadow" />
           </div>
         )}
+        {/* Delete button */}
+        <button
+          onClick={handleDelete}
+          disabled={deleting}
+          title="削除"
+          className="absolute top-2 left-2 p-1 rounded-full bg-black/40 text-white opacity-0 group-hover:opacity-100 hover:bg-black/60 transition-all disabled:opacity-30"
+        >
+          <Trash2 className="h-3 w-3" />
+        </button>
       </div>
 
       <div className="p-4 flex flex-col gap-3 flex-1">
@@ -469,7 +504,7 @@ function VideoCard({
           )}
         </div>
 
-        {/* Complete button */}
+        {/* Action button */}
         <div>
           {isCompleted ? (
             <button
@@ -477,7 +512,7 @@ function VideoCard({
               disabled={marking}
               className="rounded-md border border-[var(--border-default,rgba(0,0,0,0.12))] bg-transparent hover:bg-muted px-3 py-1 text-xs font-medium text-[var(--text-secondary,#6B6B68)] transition-colors disabled:opacity-50"
             >
-              {marking ? "記録中..." : `＋1周 (→${video.lapCount + 1}周目)`}
+              {marking ? "記録中..." : `もう1周 (${video.lapCount + 1}周目)`}
             </button>
           ) : (
             <button
@@ -485,7 +520,7 @@ function VideoCard({
               disabled={marking}
               className="w-full rounded-md bg-primary hover:bg-primary/90 text-primary-foreground px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50"
             >
-              {marking ? "記録中..." : "完了にする"}
+              {marking ? "記録中..." : "クリア！"}
             </button>
           )}
         </div>
