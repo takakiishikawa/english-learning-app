@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { Banner } from "@takaki/go-design-system"
 import { SpeakingScoreModal } from "@/components/speaking-score-modal"
 import type { SpeakingScore } from "@/lib/types"
 
@@ -36,18 +37,11 @@ export function SpeakingTestReminder({
 
   return (
     <>
-      <div className="flex items-center justify-between rounded-[8px] border border-[var(--border-subtle,rgba(0,0,0,0.08))] bg-card px-4 py-3 text-[15px]">
-        <span className="text-foreground">
-          今月の NC AI Speaking Test の受検日です。記録しましょう。
-        </span>
-        <button
-          onClick={() => setModalOpen(true)}
-          className="ml-4 shrink-0 rounded-[6px] bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-        >
-          記録する
-        </button>
-      </div>
-
+      <Banner
+        variant="warning"
+        description="今月の NC AI Speaking Test の受検日です。記録しましょう。"
+        action={{ label: "記録する", onClick: () => setModalOpen(true) }}
+      />
       <SpeakingScoreModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}

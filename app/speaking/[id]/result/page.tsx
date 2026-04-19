@@ -30,9 +30,9 @@ function parseComment(raw: string) {
 function ScoreBar({ label, score }: { label: string; score: number }) {
   const pct = Math.min(100, Math.max(0, score))
   const color =
-    pct >= 80 ? "bg-indigo-500" :
-    pct >= 60 ? "bg-indigo-400" :
-    pct >= 40 ? "bg-amber-400" : "bg-rose-400"
+    pct >= 80 ? "bg-[--color-grammar]" :
+    pct >= 60 ? "bg-[--color-grammar]/70" :
+    pct >= 40 ? "bg-[--color-warning]" : "bg-destructive"
 
   return (
     <div className="space-y-1.5">
@@ -61,9 +61,9 @@ function BeforeAfterCard({ before, after, type }: { before: string | null; after
           <p className="text-sm leading-snug text-muted-foreground">{before}</p>
         </div>
         <span className="text-muted-foreground text-center text-sm">→</span>
-        <div className="rounded-lg bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 px-3 py-2.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-indigo-500/70 mb-1">After</p>
-          <p className="text-sm leading-snug text-indigo-900 dark:text-indigo-100">{after}</p>
+        <div className="rounded-lg bg-[--color-grammar]/10 border border-[--color-grammar]/30 px-3 py-2.5">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[--color-grammar]/70 mb-1">After</p>
+          <p className="text-sm leading-snug text-foreground">{after}</p>
         </div>
       </div>
     </div>
@@ -89,7 +89,7 @@ function SpeakButton({ text }: { text: string }) {
     <button
       onClick={speak}
       className={`flex-shrink-0 p-1.5 rounded-full transition-colors ${
-        speaking ? "text-indigo-500" : "text-muted-foreground hover:text-foreground"
+        speaking ? "text-[--color-grammar]" : "text-muted-foreground hover:text-foreground"
       }`}
       aria-label="音声を再生"
     >
@@ -182,7 +182,7 @@ function ResultContent() {
   return (
     <div className="max-w-lg mx-auto space-y-5">
       <div>
-        <h1 className="text-2xl font-bold">評価結果</h1>
+        <h1 className="text-[25px] font-medium">評価結果</h1>
         {data.grammar && (
           <p className="text-base text-muted-foreground mt-0.5">{data.grammar.name}</p>
         )}
@@ -212,7 +212,7 @@ function ResultContent() {
             <>
               {/* Good point */}
               <div className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-green-500" />
+                <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-[--color-success]" />
                 <p className="text-sm leading-relaxed text-foreground">{sections.good}</p>
               </div>
 

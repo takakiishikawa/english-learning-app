@@ -44,8 +44,8 @@ export default async function SpeakingPage() {
 
       {/* Pending image generation banner */}
       {pending.length > 0 && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 px-4 py-3 flex items-center justify-between gap-4">
-          <p className="text-sm text-amber-800 dark:text-amber-300">
+        <div className="rounded-lg border border-[--color-warning]/30 bg-[--color-warning]/10 px-4 py-3 flex items-center justify-between gap-4">
+          <p className="text-sm text-[--color-warning]">
             {pending.length}件の文法の画像がまだ生成されていません
           </p>
           <GenerateImagesButton items={pending} />

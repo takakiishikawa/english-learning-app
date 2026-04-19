@@ -50,22 +50,22 @@ export default function PracticePage() {
         <PracticeCard
           onClick={() => router.push("/repeating/expression")}
           icon={<MessageSquare className="h-5 w-5" />}
-          iconBg="bg-[#F0FDFA] dark:bg-[#0D9488]/10"
-          iconColor="text-[#0D9488] dark:text-[#14B8A6]"
+          iconBg="bg-[--color-phrase]/10"
+          iconColor="text-[--color-phrase]"
           title="フレーズ練習"
         />
         <PracticeCard
           onClick={() => router.push("/speaking")}
           icon={<Mic className="h-5 w-5" />}
-          iconBg="bg-[#FFF7ED] dark:bg-[#EA580C]/10"
-          iconColor="text-[#EA580C] dark:text-[#F97316]"
+          iconBg="bg-[--color-speaking]/10"
+          iconColor="text-[--color-speaking]"
           title="スピーキング"
         />
         <PracticeCard
           onClick={() => router.push("/shadowing")}
           icon={<Play className="h-5 w-5" />}
-          iconBg="bg-[#FEF2F2] dark:bg-[#DC2626]/10"
-          iconColor="text-[#DC2626] dark:text-[#EF4444]"
+          iconBg="bg-destructive/10"
+          iconColor="text-destructive"
           title="シャドーイング"
         />
       </div>

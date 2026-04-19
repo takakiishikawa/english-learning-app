@@ -23,10 +23,10 @@ function CountdownRing({ remaining, total }: { remaining: number; total: number 
         <circle
           cx="60" cy="60" r={r} fill="none" stroke="currentColor" strokeWidth="6"
           strokeDasharray={circumference} strokeDashoffset={dashOffset} strokeLinecap="round"
-          className={`transition-all duration-1000 ${remaining <= 10 ? "text-red-500" : "text-blue-500"}`}
+          className={`transition-all duration-1000 ${remaining <= 10 ? "text-destructive" : "text-[--color-grammar]"}`}
         />
       </svg>
-      <span className={`absolute text-3xl font-bold tabular-nums ${remaining <= 10 ? "text-red-500" : "text-foreground"}`}>
+      <span className={`absolute text-3xl font-bold tabular-nums ${remaining <= 10 ? "text-destructive" : "text-foreground"}`}>
         {remaining}
       </span>
     </div>
@@ -54,7 +54,7 @@ function PastFeedbackCard({ log, index }: { log: PastLog; index: number }) {
       </div>
       {good ? (
         <p className="flex items-start gap-1.5 text-xs leading-relaxed">
-          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5 text-green-600 dark:text-green-400" />
+          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5 text-[--color-success]" />
           <span className="text-foreground">{good}</span>
         </p>
       ) : (
@@ -262,8 +262,8 @@ export function PracticeClient({
           <div className="flex flex-col items-center gap-3">
             <CountdownRing remaining={remaining} total={DURATION} />
             <div className="flex items-center gap-2">
-              <span className="inline-block w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-sm font-medium text-red-500">録音中</span>
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-destructive animate-pulse" />
+              <span className="text-sm font-medium text-destructive">録音中</span>
             </div>
             <div className="w-full rounded-lg border bg-muted/20 px-4 py-3 min-h-[56px]">
               {finalText || interimText ? (
@@ -295,7 +295,7 @@ export function PracticeClient({
 
         {state === "evaluating" && (
           <div className="flex flex-col items-center gap-3 pt-4">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <p className="text-sm text-muted-foreground">AIが評価中...</p>
           </div>
         )}

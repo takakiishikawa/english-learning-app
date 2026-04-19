@@ -13,7 +13,7 @@ function StarRating({ value }: { value: number }) {
       {[1, 2, 3, 4, 5].map((i) => (
         <Star
           key={i}
-          className={`h-3 w-3 ${i <= value ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`}
+          className={`h-3 w-3 ${i <= value ? "fill-[--color-warning] text-[--color-warning]" : "text-muted-foreground"}`}
         />
       ))}
     </span>
@@ -22,10 +22,10 @@ function StarRating({ value }: { value: number }) {
 
 function GrammarPreview({ item }: { item: ExtractedGrammar }) {
   return (
-    <Card className="border-blue-200">
+    <Card className="border-[--color-grammar]/30">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base text-blue-700">{item.name}</CardTitle>
+          <CardTitle className="text-base text-[--color-grammar]">{item.name}</CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant="secondary">文法</Badge>
             <StarRating value={item.frequency} />
@@ -41,7 +41,7 @@ function GrammarPreview({ item }: { item: ExtractedGrammar }) {
           <p className="font-medium mb-1">例文:</p>
           <ul className="space-y-1">
             {item.examples.map((ex, i) => (
-              <li key={i} className="text-muted-foreground pl-2 border-l-2 border-blue-200">
+              <li key={i} className="text-muted-foreground pl-2 border-l-2 border-[--color-grammar]/30">
                 {ex}
               </li>
             ))}
@@ -56,10 +56,10 @@ function GrammarPreview({ item }: { item: ExtractedGrammar }) {
 function ExpressionPreview({ item }: { item: ExtractedExpression }) {
   const lines = item.conversation
   return (
-    <Card className="border-teal-200">
+    <Card className="border-[--color-phrase]/30">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base text-teal-700">{item.expression}</CardTitle>
+          <CardTitle className="text-base text-[--color-phrase]">{item.expression}</CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant="outline">{item.category}</Badge>
             <StarRating value={item.frequency} />
@@ -76,8 +76,8 @@ function ExpressionPreview({ item }: { item: ExtractedExpression }) {
                 key={i}
                 className={`pl-2 ${
                   line.startsWith("A:")
-                    ? "text-blue-700 border-l-2 border-blue-300"
-                    : "text-amber-700 border-l-2 border-amber-300"
+                    ? "text-[--color-grammar] border-l-2 border-[--color-grammar]/40"
+                    : "text-[--color-phrase] border-l-2 border-[--color-phrase]/40"
                 }`}
               >
                 {line}

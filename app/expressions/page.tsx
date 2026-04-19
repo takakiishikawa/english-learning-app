@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
 import {
-  Badge,
+  Badge, DataTable,
   Dialog, DialogContent, DialogHeader, DialogTitle,
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@takaki/go-design-system"
+import type { ColumnDef } from "@tanstack/react-table"
 import type { Expression } from "@/lib/types"
 import { Star } from "lucide-react"
 
@@ -16,7 +16,7 @@ function StarRating({ value }: { value: number }) {
       {[1, 2, 3, 4, 5].map((i) => (
         <Star
           key={i}
-          className={`h-3 w-3 ${i <= value ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`}
+          className={`h-3 w-3 ${i <= value ? "fill-[--color-warning] text-[--color-warning]" : "text-muted-foreground"}`}
         />
       ))}
     </span>
@@ -41,6 +41,50 @@ export default function ExpressionsPage() {
     load()
   }, [])
 
+  const columns = useMemo((): ColumnDef<Expression>[] => [
+    {
+      accessorKey: "category",
+      header: "種別",
+      cell: ({ row }) => <Badge variant="outline">{row.original.category}</Badge>,
+    },
+    {
+      accessorKey: "expression",
+      header: "表現",
+      cell: ({ row }) => (
+        <button
+          onClick={() => setSelected(row.original)}
+          className="font-medium text-left hover:underline text-foreground"
+        >
+          {row.original.expression}
+        </button>
+      ),
+    },
+    {
+      accessorKey: "meaning",
+      header: "意味",
+      cell: ({ row }) => (
+        <span className="text-muted-foreground text-sm line-clamp-1 max-w-xs block">{row.original.meaning}</span>
+      ),
+    },
+    {
+      accessorKey: "frequency",
+      header: "頻度",
+      cell: ({ row }) => <StarRating value={row.original.frequency} />,
+    },
+    {
+      accessorKey: "play_count",
+      header: "回数",
+      cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.original.play_count} / 10</span>,
+    },
+    {
+      id: "status",
+      header: "ステータス",
+      cell: ({ row }) => row.original.play_count >= 10
+        ? <Badge className="border-transparent bg-[--color-success-subtle] text-[--color-success]">習得済み</Badge>
+        : <Badge className="border-transparent bg-[--color-warning-subtle] text-[--color-warning]">練習中</Badge>,
+    },
+  ], [])
+
   if (loading) {
     return <div className="flex items-center justify-center h-64 text-muted-foreground">読み込み中...</div>
   }
@@ -55,46 +99,13 @@ export default function ExpressionsPage() {
         </span>
       </div>
 
-      <div className="rounded-md border overflow-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>種別</TableHead>
-              <TableHead>表現</TableHead>
-              <TableHead>意味</TableHead>
-              <TableHead>頻度</TableHead>
-              <TableHead>回数</TableHead>
-              <TableHead>ステータス</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {items.map((item) => (
-              <TableRow
-                key={item.id}
-                className="cursor-pointer hover:bg-muted/50"
-                onClick={() => setSelected(item)}
-              >
-                <TableCell>
-                  <Badge variant="outline">{item.category}</Badge>
-                </TableCell>
-                <TableCell className="font-medium">{item.expression}</TableCell>
-                <TableCell className="text-muted-foreground text-sm">{item.meaning}</TableCell>
-                <TableCell>
-                  <StarRating value={item.frequency} />
-                </TableCell>
-                <TableCell className="text-sm">{item.play_count} / 10</TableCell>
-                <TableCell>
-                  {item.play_count >= 10 ? (
-                    <Badge className="border-transparent bg-[#ECFDF5] text-[#10B981]">習得済み</Badge>
-                  ) : (
-                    <Badge className="border-transparent bg-[#FFFBEB] text-[#F59E0B]">練習中</Badge>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <DataTable
+        columns={columns}
+        data={items}
+        searchable={{ columnId: "expression", placeholder: "フレーズで検索..." }}
+        pageSize={20}
+        emptyMessage="フレーズが登録されていません"
+      />
 
       {selected && (
         <Dialog open={!!selected} onOpenChange={(open) => { if (!open) setSelected(null) }}>
@@ -122,7 +133,7 @@ export default function ExpressionsPage() {
                       <div
                         key={i}
                         className={`rounded-lg px-3 py-2.5 text-base ${
-                          isA ? "bg-blue-50 text-blue-900" : "bg-amber-50 text-amber-900"
+                          isA ? "bg-[--color-grammar]/10 text-[--color-grammar]" : "bg-[--color-phrase]/10 text-[--color-phrase]"
                         }`}
                       >
                         {line}
@@ -137,7 +148,7 @@ export default function ExpressionsPage() {
                   <StarRating value={selected.frequency} />
                 </div>
                 <span className="text-sm text-muted-foreground">練習回数: {selected.play_count} / 10</span>
-                <Badge className={selected.play_count >= 10 ? "border-transparent bg-[#ECFDF5] text-[#10B981]" : "border-transparent bg-[#FFFBEB] text-[#F59E0B]"}>
+                <Badge className={selected.play_count >= 10 ? "border-transparent bg-[--color-success-subtle] text-[--color-success]" : "border-transparent bg-[--color-warning-subtle] text-[--color-warning]"}>
                   {selected.play_count >= 10 ? "習得済み" : "練習中"}
                 </Badge>
               </div>

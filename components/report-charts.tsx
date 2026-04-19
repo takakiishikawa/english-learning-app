@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@takaki/go-design-system"
-import { LineChart, type LineChartPoint, type LineChartSeries } from "@/components/line-chart"
+import { Tabs, TabsList, TabsTrigger, TabsContent, ChartArea } from "@takaki/go-design-system"
+import type { ChartConfig } from "@takaki/go-design-system"
 
 type PracticeLog = {
   practiced_at: string
@@ -40,10 +40,12 @@ function fmtDate(str: string): string {
   return `${m}/${d}`
 }
 
+type ChartRow = Record<string, string | number>
+
 function buildMonthlyData(logs: PracticeLog[], ncLogs: NcLog[]): {
-  repeating: LineChartPoint[]
-  speaking: LineChartPoint[]
-  nativeCamp: LineChartPoint[]
+  repeating: ChartRow[]
+  speaking: ChartRow[]
+  nativeCamp: ChartRow[]
 } {
   const rMap = new Map<string, { grammar: number; expression: number; speaking: number }>()
   for (const l of logs) {
@@ -58,16 +60,16 @@ function buildMonthlyData(logs: PracticeLog[], ncLogs: NcLog[]): {
   }
   const allMonths = [...new Set([...rMap.keys(), ...ncMap.keys()])].sort()
   return {
-    repeating: allMonths.map((ym) => ({ label: fmtMonth(ym), grammar: rMap.get(ym)?.grammar ?? 0, expression: rMap.get(ym)?.expression ?? 0 })),
-    speaking:  allMonths.map((ym) => ({ label: fmtMonth(ym), speaking: rMap.get(ym)?.speaking ?? 0 })),
+    repeating:  allMonths.map((ym) => ({ label: fmtMonth(ym), grammar: rMap.get(ym)?.grammar ?? 0, expression: rMap.get(ym)?.expression ?? 0 })),
+    speaking:   allMonths.map((ym) => ({ label: fmtMonth(ym), speaking: rMap.get(ym)?.speaking ?? 0 })),
     nativeCamp: allMonths.map((ym) => ({ label: fmtMonth(ym), minutes: ncMap.get(ym) ?? 0 })),
   }
 }
 
 function buildAllTimeData(logs: PracticeLog[], ncLogs: NcLog[]): {
-  repeating: LineChartPoint[]
-  speaking: LineChartPoint[]
-  nativeCamp: LineChartPoint[]
+  repeating: ChartRow[]
+  speaking: ChartRow[]
+  nativeCamp: ChartRow[]
 } {
   const sorted = [...logs].sort((a, b) => a.practiced_at.localeCompare(b.practiced_at))
   const ncDayMap = new Map<string, number>()
@@ -80,7 +82,7 @@ function buildAllTimeData(logs: PracticeLog[], ncLogs: NcLog[]): {
   }
 }
 
-function buildShadowingData(youtubeLogs: YoutubeLog[], mode: "monthly" | "alltime"): LineChartPoint[] {
+function buildShadowingData(youtubeLogs: YoutubeLog[], mode: "monthly" | "alltime"): ChartRow[] {
   if (mode === "monthly") {
     const map = new Map<string, number>()
     for (const l of youtubeLogs) {
@@ -97,19 +99,22 @@ function buildShadowingData(youtubeLogs: YoutubeLog[], mode: "monthly" | "alltim
   return [...map.keys()].sort().map((d) => ({ label: fmtDate(d), minutes: map.get(d) ?? 0 }))
 }
 
-const repeatingSeries: LineChartSeries[] = [
-  { key: "grammar",    label: "文法",     color: "#5B6AF0" },
-  { key: "expression", label: "フレーズ", color: "#A5B4FC" },
-]
-const speakingSeries: LineChartSeries[] = [
-  { key: "speaking", label: "スピーキング", color: "#5B6AF0" },
-]
-const ncSeries: LineChartSeries[] = [
-  { key: "minutes", label: "学習時間", color: "#5B6AF0" },
-]
-const shadowingSeries: LineChartSeries[] = [
-  { key: "minutes", label: "視聴時間", color: "#5B6AF0" },
-]
+const noRanges: never[] = []
+const xFmt = (v: string) => v
+
+const repeatingConfig: ChartConfig = {
+  grammar:    { label: "文法",     color: "var(--color-grammar)" },
+  expression: { label: "フレーズ", color: "#A5B4FC" },
+}
+const speakingConfig: ChartConfig = {
+  speaking: { label: "スピーキング", color: "var(--color-grammar)" },
+}
+const ncConfig: ChartConfig = {
+  minutes: { label: "学習時間", color: "var(--color-grammar)" },
+}
+const shadowingConfig: ChartConfig = {
+  minutes: { label: "視聴時間", color: "var(--color-grammar)" },
+}
 
 export function ReportCharts({ logs, ncLogs, youtubeLogs }: { logs: PracticeLog[]; ncLogs: NcLog[]; youtubeLogs: YoutubeLog[] }) {
   const [mode, setMode] = useState<"monthly" | "alltime">("monthly")
@@ -125,10 +130,46 @@ export function ReportCharts({ logs, ncLogs, youtubeLogs }: { logs: PracticeLog[
         <TabsTrigger value="alltime">全期間</TabsTrigger>
       </TabsList>
       <TabsContent value={mode} className="space-y-3 mt-4">
-        <LineChart title="リピーティング" series={repeatingSeries} data={data.repeating} unit="回" />
-        <LineChart title="スピーキング" series={speakingSeries} data={data.speaking} unit="回" />
-        <LineChart title="Native Camp 学習時間" series={ncSeries} data={data.nativeCamp} unit="分" />
-        <LineChart title="シャドーイング 視聴時間" series={shadowingSeries} data={shadowingData} unit="分" />
+        <ChartArea
+          data={data.repeating as Record<string, unknown>[]}
+          config={repeatingConfig}
+          xKey="label"
+          yKeys={["grammar", "expression"]}
+          title="リピーティング"
+          timeRanges={noRanges}
+          filterByDate={false}
+          xTickFormatter={xFmt}
+        />
+        <ChartArea
+          data={data.speaking as Record<string, unknown>[]}
+          config={speakingConfig}
+          xKey="label"
+          yKeys={["speaking"]}
+          title="スピーキング"
+          timeRanges={noRanges}
+          filterByDate={false}
+          xTickFormatter={xFmt}
+        />
+        <ChartArea
+          data={data.nativeCamp as Record<string, unknown>[]}
+          config={ncConfig}
+          xKey="label"
+          yKeys={["minutes"]}
+          title="Native Camp 学習時間"
+          timeRanges={noRanges}
+          filterByDate={false}
+          xTickFormatter={xFmt}
+        />
+        <ChartArea
+          data={shadowingData as Record<string, unknown>[]}
+          config={shadowingConfig}
+          xKey="label"
+          yKeys={["minutes"]}
+          title="シャドーイング 視聴時間"
+          timeRanges={noRanges}
+          filterByDate={false}
+          xTickFormatter={xFmt}
+        />
       </TabsContent>
     </Tabs>
   )

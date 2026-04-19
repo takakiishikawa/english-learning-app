@@ -1,18 +1,18 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
 import {
-  Badge,
+  Badge, DataTable,
   Dialog, DialogContent, DialogHeader, DialogTitle,
   Tabs, TabsContent, TabsList, TabsTrigger,
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@takaki/go-design-system"
+import type { ColumnDef } from "@tanstack/react-table"
 import type { Grammar, Expression } from "@/lib/types"
+import { Star } from "lucide-react"
 
 type GrammarWithLesson = Grammar & { lessons: { lesson_no: string } | null }
 type ExpressionWithLesson = Expression & { lessons: { lesson_no: string } | null }
-import { Star } from "lucide-react"
 
 function StarRating({ value }: { value: number }) {
   return (
@@ -20,7 +20,7 @@ function StarRating({ value }: { value: number }) {
       {[1, 2, 3, 4, 5].map((i) => (
         <Star
           key={i}
-          className={`h-4 w-4 ${i <= value ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`}
+          className={`h-4 w-4 ${i <= value ? "fill-[--color-warning] text-[--color-warning]" : "text-muted-foreground"}`}
         />
       ))}
     </span>
@@ -58,6 +58,47 @@ function GrammarTab() {
     load()
   }, [])
 
+  const columns = useMemo((): ColumnDef<GrammarWithLesson>[] => [
+    {
+      id: "lesson_no",
+      header: "テキストID",
+      cell: ({ row }) => (
+        <span className="font-mono text-xs text-muted-foreground">{row.original.lessons?.lesson_no ?? "—"}</span>
+      ),
+    },
+    {
+      accessorKey: "name",
+      header: "文法名",
+      cell: ({ row }) => (
+        <button
+          onClick={() => setSelected(row.original)}
+          className="font-medium text-left hover:underline text-foreground"
+        >
+          {row.original.name}
+        </button>
+      ),
+    },
+    {
+      accessorKey: "summary",
+      header: "概要",
+      cell: ({ row }) => (
+        <span className="text-muted-foreground text-sm line-clamp-1 max-w-xs block">
+          {row.original.summary.split("\n")[0]}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "frequency",
+      header: "頻度",
+      cell: ({ row }) => <StarRating value={row.original.frequency} />,
+    },
+    {
+      accessorKey: "play_count",
+      header: "回数",
+      cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.original.play_count} / 10</span>,
+    },
+  ], [])
+
   if (loading) {
     return <div className="flex items-center justify-center h-64 text-muted-foreground">読み込み中...</div>
   }
@@ -66,41 +107,18 @@ function GrammarTab() {
     <div className="space-y-3">
       <div className="flex items-center gap-3">
         <span className="text-sm text-muted-foreground">全 {items.length} 件</span>
-        <span className="inline-flex items-center gap-1 text-sm font-medium px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+        <span className="inline-flex items-center gap-1 text-sm font-medium px-2 py-0.5 rounded-full bg-[--color-success-subtle] text-[--color-success]">
           完了 {items.filter((i) => i.play_count >= 10).length}
         </span>
       </div>
 
-      <div className="rounded-md border overflow-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-20">テキストID</TableHead>
-              <TableHead>文法名</TableHead>
-              <TableHead>概要</TableHead>
-              <TableHead>頻度</TableHead>
-              <TableHead>回数</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {items.map((item) => (
-              <TableRow
-                key={item.id}
-                className="cursor-pointer hover:bg-muted/50"
-                onClick={() => setSelected(item)}
-              >
-                <TableCell className="font-mono text-xs text-muted-foreground">
-                  {item.lessons?.lesson_no ?? "—"}
-                </TableCell>
-                <TableCell className="font-medium">{item.name}</TableCell>
-                <TableCell className="text-muted-foreground text-sm max-w-xs truncate">{item.summary.split("\n")[0]}{item.summary.includes("\n") ? "..." : ""}</TableCell>
-                <TableCell><StarRating value={item.frequency} /></TableCell>
-                <TableCell className="text-sm text-muted-foreground">{item.play_count} / 10</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <DataTable
+        columns={columns}
+        data={items}
+        searchable={{ columnId: "name", placeholder: "文法名で検索..." }}
+        pageSize={20}
+        emptyMessage="文法が登録されていません"
+      />
 
       {selected && (
         <Dialog open={!!selected} onOpenChange={(open) => { if (!open) setSelected(null) }}>
@@ -152,6 +170,50 @@ function PhraseTab() {
     load()
   }, [])
 
+  const columns = useMemo((): ColumnDef<ExpressionWithLesson>[] => [
+    {
+      id: "lesson_no",
+      header: "テキストID",
+      cell: ({ row }) => (
+        <span className="font-mono text-xs text-muted-foreground">{row.original.lessons?.lesson_no ?? "—"}</span>
+      ),
+    },
+    {
+      accessorKey: "category",
+      header: "種別",
+      cell: ({ row }) => <Badge variant="outline" className="text-xs">{row.original.category}</Badge>,
+    },
+    {
+      accessorKey: "expression",
+      header: "フレーズ",
+      cell: ({ row }) => (
+        <button
+          onClick={() => setSelected(row.original)}
+          className="font-medium text-left hover:underline text-foreground"
+        >
+          {row.original.expression}
+        </button>
+      ),
+    },
+    {
+      accessorKey: "meaning",
+      header: "意味",
+      cell: ({ row }) => (
+        <span className="text-muted-foreground text-sm line-clamp-1 max-w-xs block">{row.original.meaning}</span>
+      ),
+    },
+    {
+      accessorKey: "frequency",
+      header: "頻度",
+      cell: ({ row }) => <StarRating value={row.original.frequency} />,
+    },
+    {
+      accessorKey: "play_count",
+      header: "回数",
+      cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.original.play_count} / 10</span>,
+    },
+  ], [])
+
   if (loading) {
     return <div className="flex items-center justify-center h-64 text-muted-foreground">読み込み中...</div>
   }
@@ -160,43 +222,18 @@ function PhraseTab() {
     <div className="space-y-3">
       <div className="flex items-center gap-3">
         <span className="text-sm text-muted-foreground">全 {items.length} 件</span>
-        <span className="inline-flex items-center gap-1 text-sm font-medium px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+        <span className="inline-flex items-center gap-1 text-sm font-medium px-2 py-0.5 rounded-full bg-[--color-success-subtle] text-[--color-success]">
           完了 {items.filter((i) => i.play_count >= 10).length}
         </span>
       </div>
 
-      <div className="rounded-md border overflow-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-20">テキストID</TableHead>
-              <TableHead>種別</TableHead>
-              <TableHead>フレーズ</TableHead>
-              <TableHead>意味</TableHead>
-              <TableHead>頻度</TableHead>
-              <TableHead>回数</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {items.map((item) => (
-              <TableRow
-                key={item.id}
-                className="cursor-pointer hover:bg-muted/50"
-                onClick={() => setSelected(item)}
-              >
-                <TableCell className="font-mono text-xs text-muted-foreground">
-                  {item.lessons?.lesson_no ?? "—"}
-                </TableCell>
-                <TableCell><Badge variant="outline" className="text-xs">{item.category}</Badge></TableCell>
-                <TableCell className="font-medium">{item.expression}</TableCell>
-                <TableCell className="text-muted-foreground text-sm max-w-xs truncate">{item.meaning.split("\n")[0]}{item.meaning.includes("\n") ? "..." : ""}</TableCell>
-                <TableCell><StarRating value={item.frequency} /></TableCell>
-                <TableCell className="text-sm text-muted-foreground">{item.play_count} / 10</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <DataTable
+        columns={columns}
+        data={items}
+        searchable={{ columnId: "expression", placeholder: "フレーズで検索..." }}
+        pageSize={20}
+        emptyMessage="フレーズが登録されていません"
+      />
 
       {selected && (
         <Dialog open={!!selected} onOpenChange={(open) => { if (!open) setSelected(null) }}>
@@ -216,8 +253,8 @@ function PhraseTab() {
                         key={i}
                         className={`rounded-lg px-3 py-2 text-sm ${
                           isA
-                            ? "bg-blue-50 dark:bg-blue-900/30 text-blue-900 dark:text-blue-200"
-                            : "bg-amber-50 dark:bg-amber-900/30 text-amber-900 dark:text-amber-200"
+                            ? "bg-[--color-grammar]/10 text-[--color-grammar]"
+                            : "bg-[--color-phrase]/10 text-[--color-phrase]"
                         }`}
                       >
                         {line}

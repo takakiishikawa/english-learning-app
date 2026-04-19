@@ -1,11 +1,48 @@
 import { createClient } from "@/lib/supabase/server"
-import { CTASection } from "@/components/cta-section"
-import { MetricsSection } from "@/components/metrics-section"
-import { LineChart, type LineChartPoint } from "@/components/line-chart"
+import Link from "next/link"
+import { SectionCards, type KpiCard, type ChartConfig } from "@takaki/go-design-system"
+import { DashboardChart } from "@/components/dashboard-chart"
+import { MetricModals } from "@/components/metric-modals"
 import { DashboardAutoCheck } from "@/components/dashboard-auto-check"
 import { SpeakingTestReminder } from "@/components/speaking-test-reminder"
 import { StreakPopup } from "@/components/streak-popup"
+import { ChevronRight, BookOpen, MessageSquare, Mic, Play } from "lucide-react"
 import type { SpeakingScore } from "@/lib/types"
+
+// ─── CTACard (inline, CTA向けカード) ────────────────────────────────────────
+
+function CTACard({
+  href,
+  icon,
+  iconBg,
+  iconColor,
+  label,
+  sub,
+}: {
+  href: string
+  icon: React.ReactNode
+  iconBg: string
+  iconColor: string
+  label: string
+  sub: string
+}) {
+  return (
+    <Link href={href}>
+      <div className="group flex items-center gap-3 rounded-[12px] border border-[var(--color-border-subtle)] bg-card px-4 py-3 hover:border-[var(--color-border-default)] hover:shadow-sm transition-all cursor-pointer">
+        <div className={`rounded-[8px] p-2 shrink-0 transition-colors ${iconBg}`}>
+          <span className={iconColor}>{icon}</span>
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-[16px] font-medium text-foreground">{label}</p>
+          <p className="text-[15px] text-muted-foreground mt-0.5">{sub}</p>
+        </div>
+        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+      </div>
+    </Link>
+  )
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function calculateStreak(dates: string[]): number {
   if (dates.length === 0) return 0
@@ -30,22 +67,55 @@ function fmtDate(d: Date): string {
   return `${d.getMonth() + 1}/${d.getDate()}`
 }
 
+function trendFromDiff(diff: number | null, unit: string): KpiCard["trend"] {
+  if (diff === null) return undefined
+  return {
+    value: `前7日比 ${diff >= 0 ? "+" : ""}${diff}${unit}`,
+    direction: diff > 0 ? "up" : diff < 0 ? "down" : "neutral",
+  }
+}
+
+function pctDesc(value: number, baseline: number | undefined, unit: string): string | undefined {
+  if (!baseline || baseline <= 0) return undefined
+  const pct = Math.min(Math.round((value / baseline) * 100), 100)
+  return `週目標 ${baseline}${unit}・達成率 ${pct}%`
+}
+
+// ─── Chart configs ────────────────────────────────────────────────────────────
+
+const repeatingConfig: ChartConfig = {
+  grammar:    { label: "文法",     color: "var(--color-grammar)" },
+  expression: { label: "フレーズ", color: "#A5B4FC" },
+}
+const speakingConfig: ChartConfig = {
+  count: { label: "練習回数", color: "var(--color-grammar)" },
+}
+const ncConfig: ChartConfig = {
+  minutes: { label: "学習時間", color: "var(--color-grammar)" },
+}
+const shadowingConfig: ChartConfig = {
+  minutes: { label: "視聴時間", color: "var(--color-grammar)" },
+}
+const scoreConfig: ChartConfig = {
+  score: { label: "スコア", color: "var(--color-grammar)" },
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default async function HomePage() {
   const supabase = await createClient()
 
   const today = new Date()
   const todayStr = today.toISOString().split("T")[0]
 
-  // Current 7-day window: [today-6 … today]
   const days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(today)
     d.setDate(d.getDate() - (6 - i))
     const str = d.toISOString().split("T")[0]
     return { str, label: fmtDate(d) }
   })
-  const rangeStartStr = days[0].str // today − 6
+  const rangeStartStr = days[0].str
 
-  // Previous 7-day window start: today − 13
   const prev14Start = new Date(today)
   prev14Start.setDate(prev14Start.getDate() - 13)
   const prev14StartStr = prev14Start.toISOString().split("T")[0]
@@ -106,13 +176,11 @@ export default async function HomePage() {
     }))
   }
 
-  // Split into current 7 days and previous 7 days
   const rangeLogs = allRangeLogs.filter((l) => l.practiced_at >= rangeStartStr)
   const prevRangeLogs = allRangeLogs.filter((l) => l.practiced_at < rangeStartStr)
 
   const scores = (scoresResult.data ?? []) as SpeakingScore[]
 
-  // NC logs: split into curr / prev 7 days
   const allNcLogs = allNcLogsResult.data ?? []
   const ncByDate = new Map<string, number>()
   const prevNcByDate = new Map<string, number>()
@@ -121,16 +189,13 @@ export default async function HomePage() {
     target.set(nc.logged_at, (target.get(nc.logged_at) ?? 0) + (nc.count ?? 0))
   }
 
-  // Streak
   const streak = calculateStreak(allLogs.map((l) => l.practiced_at))
 
-  // Grammar / expression progress counts
   const grammarsInProgress = grammars.filter((g) => g.play_count > 0 && g.play_count < 10).length
   const grammarDone = grammars.filter((g) => g.play_count >= 10).length
   const expressionsInProgress = expressions.filter((e) => e.play_count > 0 && e.play_count < 10).length
   const expressionDone = expressions.filter((e) => e.play_count >= 10).length
 
-  // Speaking progress: count speaking_logs per grammar (RLS filters to current user)
   const speakingLogCounts = new Map<string, number>()
   for (const log of speakingLogsResult.data ?? []) {
     speakingLogCounts.set(log.grammar_id, (speakingLogCounts.get(log.grammar_id) ?? 0) + 1)
@@ -138,33 +203,28 @@ export default async function HomePage() {
   const speakingInProgress = grammars.filter((g) => g.image_url && (speakingLogCounts.get(g.id) ?? 0) < 3).length
   const speakingDone = grammars.filter((g) => g.image_url && (speakingLogCounts.get(g.id) ?? 0) >= 3).length
 
-  // Current 7-day metrics
   const weeklyGrammar = rangeLogs.reduce((s, l) => s + l.grammar_done_count, 0)
   const weeklyExpression = rangeLogs.reduce((s, l) => s + l.expression_done_count, 0)
   const weeklyRepeating = weeklyGrammar + weeklyExpression
   const weeklySpeaking = rangeLogs.reduce((s, l) => s + l.speaking_count, 0)
   const weeklyNativeCampCount = [...ncByDate.values()].reduce((s, c) => s + c, 0)
 
-  // Previous 7-day metrics
   const prevWeeklyGrammar = prevRangeLogs.reduce((s, l) => s + l.grammar_done_count, 0)
   const prevWeeklyExpression = prevRangeLogs.reduce((s, l) => s + l.expression_done_count, 0)
   const prevWeeklyRepeating = prevWeeklyGrammar + prevWeeklyExpression
   const prevWeeklySpeaking = prevRangeLogs.reduce((s, l) => s + l.speaking_count, 0)
   const prevNativeCampCount = [...prevNcByDate.values()].reduce((s, c) => s + c, 0)
 
-  // Diffs (null if no prior data at all)
   const hasPrevData = allRangeLogs.some((l) => l.practiced_at < rangeStartStr) ||
     allNcLogs.some((nc) => nc.logged_at < rangeStartStr)
   const repeatingDiff = hasPrevData ? weeklyRepeating - prevWeeklyRepeating : null
   const speakingDiff  = hasPrevData ? weeklySpeaking  - prevWeeklySpeaking  : null
   const ncCountDiff   = hasPrevData ? weeklyNativeCampCount - prevNativeCampCount : null
 
-  // Speaking score metrics
   const sortedScores = [...scores].sort((a, b) => b.tested_at.localeCompare(a.tested_at))
   const latestScore = sortedScores.length > 0 ? sortedScores[0].score : null
   const scoreDiff = sortedScores.length >= 2 ? sortedScores[0].score - sortedScores[1].score : null
 
-  // Youtube logs: split into curr / prev 7 days (sum minutes)
   function parseDurToMin(dur: string | null | undefined): number {
     if (!dur) return 0
     const parts = dur.split(":").map(Number)
@@ -186,35 +246,64 @@ export default async function HomePage() {
   const prevWeeklyShadowing = [...prevYtByDate.values()].reduce((s, c) => s + c, 0)
   const shadowingDiff = hasPrevData ? weeklyShadowing - prevWeeklyShadowing : null
 
-  // User settings
   const settings = settingsResult.data ?? null
-
-  // Today's native camp check for auto-modal
   const hasNativeCampToday = (ncByDate.get(todayStr) ?? 0) > 0
 
-  // Charts (7 days)
+  // KPI cards for SectionCards
+  const kpiCards: KpiCard[] = [
+    {
+      title: "リピーティング",
+      value: `${weeklyRepeating}回`,
+      description: pctDesc(weeklyRepeating, settings?.baseline_repeating, "回"),
+      trend: trendFromDiff(repeatingDiff, "回"),
+    },
+    {
+      title: "スピーキング",
+      value: `${weeklySpeaking}回`,
+      description: pctDesc(weeklySpeaking, settings?.baseline_speaking, "回"),
+      trend: trendFromDiff(speakingDiff, "回"),
+    },
+    {
+      title: "Native Camp",
+      value: `${weeklyNativeCampCount * 25}分`,
+      description: pctDesc(weeklyNativeCampCount * 25, settings?.baseline_nativecamp, "分"),
+      trend: trendFromDiff(ncCountDiff !== null ? ncCountDiff * 25 : null, "分"),
+    },
+    {
+      title: "シャドーイング",
+      value: `${weeklyShadowing}分`,
+      description: pctDesc(weeklyShadowing, settings?.baseline_shadowing, "分"),
+      trend: trendFromDiff(shadowingDiff, "分"),
+    },
+    {
+      title: "AI Speaking Test",
+      value: latestScore !== null ? `${latestScore}点` : "未記録",
+      trend: scoreDiff !== null ? {
+        value: `前回比 ${scoreDiff >= 0 ? "+" : ""}${scoreDiff}点`,
+        direction: scoreDiff > 0 ? "up" : scoreDiff < 0 ? "down" : "neutral",
+      } : undefined,
+    },
+  ]
+
+  // Chart data (7 days)
   const logMap = new Map(rangeLogs.map((l) => [l.practiced_at, l]))
 
-  const repeatingChartData: LineChartPoint[] = days.map(({ str, label }) => {
+  const repeatingChartData = days.map(({ str, label }) => {
     const l = logMap.get(str)
     return { label, grammar: l?.grammar_done_count ?? 0, expression: l?.expression_done_count ?? 0 }
   })
-
-  const speakingChartData: LineChartPoint[] = days.map(({ str, label }) => {
+  const speakingChartData = days.map(({ str, label }) => {
     const l = logMap.get(str)
     return { label, count: l?.speaking_count ?? 0 }
   })
-
-  const ncChartData: LineChartPoint[] = days.map(({ str, label }) => ({
+  const ncChartData = days.map(({ str, label }) => ({
     label,
     minutes: (ncByDate.get(str) ?? 0) * 25,
   }))
-
-  const scoreChartData: LineChartPoint[] = [...scores]
+  const scoreChartData = [...scores]
     .sort((a, b) => a.tested_at.localeCompare(b.tested_at))
     .map((s) => { const d = new Date(s.tested_at); return { label: fmtDate(d), score: s.score } })
-
-  const shadowingChartData: LineChartPoint[] = days.map(({ str, label }) => ({
+  const shadowingChartData = days.map(({ str, label }) => ({
     label,
     minutes: ytByDate.get(str) ?? 0,
   }))
@@ -238,71 +327,90 @@ export default async function HomePage() {
       {/* 練習を始める */}
       <div>
         <h2 className="section-label">練習を始める</h2>
-        <CTASection
-          grammarsInProgress={grammarsInProgress}
-          expressionsInProgress={expressionsInProgress}
-          grammarDone={grammarDone}
-          expressionDone={expressionDone}
-          speakingInProgress={speakingInProgress}
-          speakingDone={speakingDone}
-        />
+        <div className="grid grid-cols-2 gap-2">
+          <CTACard
+            href="/repeating/grammar"
+            icon={<BookOpen className="h-4 w-4" />}
+            iconBg="bg-accent"
+            iconColor="text-primary"
+            label="文法リピーティング"
+            sub={`練習中 ${grammarsInProgress} / 完了 ${grammarDone}`}
+          />
+          <CTACard
+            href="/repeating/expression"
+            icon={<MessageSquare className="h-4 w-4" />}
+            iconBg="bg-[--color-phrase]/10"
+            iconColor="text-[--color-phrase]"
+            label="フレーズリピーティング"
+            sub={`練習中 ${expressionsInProgress} / 完了 ${expressionDone}`}
+          />
+          <CTACard
+            href="/speaking"
+            icon={<Mic className="h-4 w-4" />}
+            iconBg="bg-[--color-speaking]/10"
+            iconColor="text-[--color-speaking]"
+            label="スピーキング"
+            sub={`練習中 ${speakingInProgress} / 完了 ${speakingDone}`}
+          />
+          <CTACard
+            href="/shadowing"
+            icon={<Play className="h-4 w-4" />}
+            iconBg="bg-destructive/10"
+            iconColor="text-destructive"
+            label="シャドーイング"
+            sub="YouTubeで練習する"
+          />
+        </div>
       </div>
 
       {/* 学習ログ */}
       <div className="space-y-4">
         <h2 className="section-label">学習ログ</h2>
-        <MetricsSection
-          weeklyRepeating={weeklyRepeating}
-          weeklyGrammar={weeklyGrammar}
-          weeklyExpression={weeklyExpression}
-          weeklySpeaking={weeklySpeaking}
-          weeklyNativeCampCount={weeklyNativeCampCount}
-          weeklyShadowing={weeklyShadowing}
-          repeatingDiff={repeatingDiff}
-          speakingDiff={speakingDiff}
-          ncCountDiff={ncCountDiff}
-          shadowingDiff={shadowingDiff}
-          latestScore={latestScore}
-          scoreDiff={scoreDiff}
-          initialScores={scores}
-          settings={settings ?? undefined}
-        />
+        <SectionCards cards={kpiCards} />
+        <MetricModals initialScores={scores} />
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <LineChart
+          <DashboardChart
             title="リピーティング（7日間）"
-            series={[
-              { key: "grammar",    label: "文法",     color: "#5B6AF0" },
-              { key: "expression", label: "フレーズ", color: "#A5B4FC" },
-            ]}
             data={repeatingChartData}
+            config={repeatingConfig}
+            xKey="label"
+            yKeys={["grammar", "expression"]}
             unit="回"
-            dailyBaseline={settings ? Math.round(settings.baseline_repeating / 7) : undefined}
+            baseline={settings ? Math.round(settings.baseline_repeating / 7) : undefined}
           />
-          <LineChart
+          <DashboardChart
             title="スピーキング（7日間）"
-            series={[{ key: "count", label: "練習回数", color: "#5B6AF0" }]}
             data={speakingChartData}
+            config={speakingConfig}
+            xKey="label"
+            yKeys={["count"]}
             unit="回"
-            dailyBaseline={settings ? Math.round(settings.baseline_speaking / 7) : undefined}
+            baseline={settings ? Math.round(settings.baseline_speaking / 7) : undefined}
           />
-          <LineChart
+          <DashboardChart
             title="Native Camp（7日間）"
-            series={[{ key: "minutes", label: "学習時間", color: "#5B6AF0" }]}
             data={ncChartData}
+            config={ncConfig}
+            xKey="label"
+            yKeys={["minutes"]}
             unit="分"
-            dailyBaseline={settings ? Math.round(settings.baseline_nativecamp / 7) : undefined}
+            baseline={settings ? Math.round(settings.baseline_nativecamp / 7) : undefined}
           />
-          <LineChart
+          <DashboardChart
             title="シャドーイング（7日間）"
-            series={[{ key: "minutes", label: "視聴時間", color: "#5B6AF0" }]}
             data={shadowingChartData}
+            config={shadowingConfig}
+            xKey="label"
+            yKeys={["minutes"]}
             unit="分"
-            dailyBaseline={settings ? Math.round(settings.baseline_shadowing / 7) : undefined}
+            baseline={settings ? Math.round(settings.baseline_shadowing / 7) : undefined}
           />
-          <LineChart
+          <DashboardChart
             title="NC AI Speaking Test スコア"
-            series={[{ key: "score", label: "スコア", color: "#5B6AF0" }]}
             data={scoreChartData}
+            config={scoreConfig}
+            xKey="label"
+            yKeys={["score"]}
             unit="点"
             emptyText="スコアを記録するとグラフが表示されます"
           />

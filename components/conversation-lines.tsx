@@ -20,7 +20,7 @@ export function ConversationLines({
             <div
               className={`
                 shrink-0 w-9 h-9 rounded-full flex items-center justify-center shadow-sm
-                ${isA ? "bg-blue-500" : "bg-teal-600"}
+                ${isA ? "bg-[--color-grammar]" : "bg-[--color-phrase]"}
               `}
             >
               <UserRound className="h-5 w-5 text-white" />
@@ -32,8 +32,8 @@ export function ConversationLines({
                 "max-w-[85%] rounded-2xl rounded-bl-sm px-4 py-3 text-xl leading-relaxed transition-all duration-200",
                 isActive
                   ? isA
-                    ? "bg-blue-500 text-white shadow-md"
-                    : "bg-teal-600 text-white shadow-md"
+                    ? "bg-[--color-grammar] text-white shadow-md"
+                    : "bg-[--color-phrase] text-white shadow-md"
                   : "bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200",
               ].join(" ")}
             >
