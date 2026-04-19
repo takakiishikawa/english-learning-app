@@ -1,9 +1,12 @@
 import type { Metadata } from "next"
 import { Inter, Noto_Sans_JP } from "next/font/google"
+import "@takaki/go-design-system/tokens.css"
+import "@takaki/go-design-system/globals.css"
 import "./globals.css"
-import { Nav } from "@/components/layout/nav"
+import { AppLayout } from "@takaki/go-design-system"
+import { NativeGoSidebar } from "@/components/layout/native-go-sidebar"
 import { createClient } from "@/lib/supabase/server"
-import { Toaster } from "@/components/ui/sonner"
+import { Toaster } from "@takaki/go-design-system"
 import { DarkModeInit } from "@/components/dark-mode-init"
 import { LoginToast } from "@/components/login-toast"
 import { Suspense } from "react"
@@ -48,15 +51,12 @@ export default async function RootLayout({
       </head>
       <body className="min-h-full">
         {user ? (
-          <div className="flex h-screen">
-            <Nav />
-            <main className="flex-1 overflow-y-auto p-8 bg-background">
-              <Suspense>
-                <LoginToast />
-              </Suspense>
-              {children}
-            </main>
-          </div>
+          <AppLayout sidebar={<NativeGoSidebar />}>
+            <Suspense>
+              <LoginToast />
+            </Suspense>
+            {children}
+          </AppLayout>
         ) : (
           <main>{children}</main>
         )}

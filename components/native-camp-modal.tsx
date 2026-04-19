@@ -1,11 +1,23 @@
 "use client"
 
 import { useState } from "react"
-import { Dialog } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { DateButton } from "@/components/ui/date-button"
+import {
+  Button, Input,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+  DatePicker,
+} from "@takaki/go-design-system"
 import { upsertNativeCampLog } from "@/app/actions/practice"
+
+function toDateObj(str: string): Date {
+  return new Date(str + "T00:00:00")
+}
+
+function toDateStr(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const d = String(date.getDate()).padStart(2, "0")
+  return `${y}-${m}-${d}`
+}
 
 export function NativeCampModal({
   open,
@@ -35,38 +47,46 @@ export function NativeCampModal({
   }
 
   return (
-    <Dialog open={open} onClose={onClose} title="Native Camp 記録">
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">日付</label>
-            <DateButton value={date} onChange={setDate} />
+    <Dialog open={open} onOpenChange={(open) => { if (!open) onClose() }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Native Camp 記録</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">日付</label>
+              <DatePicker
+                value={toDateObj(date)}
+                onChange={(d) => { if (d) setDate(toDateStr(d)) }}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">回数</label>
+              <Input
+                type="number"
+                min={0}
+                value={count}
+                onChange={(e) => setCount(Math.max(0, parseInt(e.target.value) || 0))}
+              />
+              <p className="text-sm text-muted-foreground">
+                {count === 0 ? "お休み" : `${minutes}分`}
+              </p>
+            </div>
           </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">回数</label>
-            <Input
-              type="number"
-              min={0}
-              value={count}
-              onChange={(e) => setCount(Math.max(0, parseInt(e.target.value) || 0))}
-            />
-            <p className="text-sm text-muted-foreground">
-              {count === 0 ? "お休み" : `${minutes}分`}
-            </p>
+
+          {error && <p className="text-sm text-destructive">{error}</p>}
+
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={onClose} className="flex-1">
+              キャンセル
+            </Button>
+            <Button onClick={handleSave} disabled={saving} className="flex-1">
+              {saving ? "保存中..." : "保存"}
+            </Button>
           </div>
         </div>
-
-        {error && <p className="text-sm text-destructive">{error}</p>}
-
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={onClose} className="flex-1">
-            キャンセル
-          </Button>
-          <Button onClick={handleSave} disabled={saving} className="flex-1">
-            {saving ? "保存中..." : "保存"}
-          </Button>
-        </div>
-      </div>
+      </DialogContent>
     </Dialog>
   )
 }

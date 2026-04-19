@@ -1,11 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
+import { Button, Textarea, Card, CardContent, CardHeader, CardTitle, CardDescription, Badge, Separator } from "@takaki/go-design-system"
 import { toast } from "sonner"
 import { saveGrammar, saveExpressions } from "@/app/actions/practice"
 import type { ExtractResult, ExtractedGrammar, ExtractedExpression } from "@/lib/types"

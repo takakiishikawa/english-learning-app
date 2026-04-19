@@ -1,132 +1,52 @@
-import { LightBulbIcon } from "@heroicons/react/24/outline"
+import { ConceptPage } from "@takaki/go-design-system"
+import { RefreshCcw } from "lucide-react"
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+export default function ConceptRoute() {
   return (
-    <section className="space-y-3">
-      <h2 className="text-[16px] font-medium text-foreground">{title}</h2>
-      {children}
-    </section>
-  )
-}
-
-function ConceptTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
-  return (
-    <div className="rounded-[8px] border border-[var(--border-subtle,rgba(0,0,0,0.08))] overflow-hidden">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b bg-muted">
-            {headers.map((h) => (
-              <th key={h} className="px-4 py-2.5 text-left text-[13px] font-medium text-[var(--text-tertiary)] uppercase tracking-[0.05em]">
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, i) => (
-            <tr key={i} className="border-b last:border-0">
-              {row.map((cell, j) => (
-                <td key={j} className={`px-4 py-3 text-[15px] text-[var(--text-secondary)] ${j === 0 ? "font-medium text-foreground" : ""}`}>
-                  {cell}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
-
-function FlowStep({ children, isLast = false }: { children: React.ReactNode; isLast?: boolean }) {
-  return (
-    <div className="flex flex-col items-start">
-      <div className="rounded-[8px] border border-[var(--border-subtle,rgba(0,0,0,0.08))] bg-card px-4 py-3 text-[15px] text-[var(--text-secondary)] w-full">
-        {children}
-      </div>
-      {!isLast && <div className="pl-4 py-1 text-[var(--text-tertiary)] text-base leading-none">↓</div>}
-    </div>
-  )
-}
-
-export default function ConceptPage() {
-  return (
-    <div className="max-w-2xl space-y-8">
-      <div>
-        <div className="flex items-center gap-2.5 mb-1">
-          <div className="rounded-[6px] bg-accent p-1.5">
-            <LightBulbIcon className="h-4 w-4 text-primary" />
-          </div>
-          <h1 className="text-[25px] font-medium">NativeGo Concept</h1>
+    <ConceptPage
+      productName="NativeGo"
+      productLogo={
+        <div className="flex items-center justify-center rounded-[6px] bg-primary p-1.5">
+          <RefreshCcw className="h-3.5 w-3.5 text-white" />
         </div>
-      </div>
-
-      <Section title="プロダクトコアバリュー">
-        <div className="rounded-[8px] border border-[var(--border-subtle,rgba(0,0,0,0.08))] bg-card px-5 py-4">
-          <p className="text-[15px] text-[var(--text-secondary)] leading-relaxed">
-            Native Camp のレッスンで学んだ英語を、使える状態として定着させる。
-          </p>
-        </div>
-      </Section>
-
-      <Section title="プロダクトスコープ">
-        <ConceptTable
-          headers={["", "内容"]}
-          rows={[
-            ["解くこと", "Native Camp と連動した復習・定着・組み立て練習"],
-            ["解かないこと", "語彙インプット・リスニング強化・英会話実践・テスト対策・汎用教材対応"],
-          ]}
-        />
-      </Section>
-
-      <Section title="習得ロジック">
-        <p className="text-[15px] text-muted-foreground">英語習得に必要な3要素を NativeGo で鍛える。</p>
-        <ConceptTable
-          headers={["要素", "内容", "NativeGoでの手段"]}
-          rows={[
-            ["聞ける", "音と意味の一致", "リピーティング"],
-            ["組み立てる", "自分の考えを英語で生成する", "スピーキング"],
-            ["出せる", "表現が反射的に口から出る", "リピーティング"],
-          ]}
-        />
-      </Section>
-
-      <Section title="ユーザーストーリー">
-        <div className="space-y-0">
-          <FlowStep>Native Camp でレッスンを受ける</FlowStep>
-          <FlowStep>レッスン教材を NativeGo に貼り付ける</FlowStep>
-          <FlowStep>AI が文法・フレーズ・画像を自動生成</FlowStep>
-          <FlowStep>
-            <span className="font-medium text-foreground">聞ける・出せる：</span>リピーティング（文法・フレーズ）
-            <br />
-            <span className="font-medium text-foreground">組み立てる：</span>スピーキング練習
-          </FlowStep>
-          <FlowStep>次の Native Camp で実際に使える</FlowStep>
-          <FlowStep isLast>
-            AI Speaking Test でスコアを計測・記録
-            <span className="ml-2 text-xs text-muted-foreground">（定期的に）</span>
-          </FlowStep>
-        </div>
-      </Section>
-
-      <Section title="行動指標">
-        <ConceptTable
-          headers={["指標", "頻度"]}
-          rows={[
-            ["NativeCamp 英会話回数", "週単位"],
-            ["リピーティング回数", "週単位"],
-            ["スピーキング回数", "週単位"],
-          ]}
-        />
-      </Section>
-
-      <Section title="結果指標">
-        <div className="rounded-[8px] border border-[var(--border-subtle,rgba(0,0,0,0.08))] bg-card px-5 py-4">
-          <p className="text-[15px] text-[var(--text-secondary)] leading-relaxed">
-            Native Camp の AI Speaking Test の点数
-          </p>
-        </div>
-      </Section>
-    </div>
+      }
+      tagline="Native Camp の学びを定着させるツール"
+      coreMessage="Native Camp のレッスンで学んだ英語を、使える状態として定着させる。インプットで終わらせず、繰り返しと実践で「出せる英語」を身につける。"
+      coreValue="Native Camp で得た英語表現を、リピーティング・スピーキングを通じて定着させる"
+      scope={{
+        solve: [
+          "Native Camp と連動した復習・定着・組み立て練習",
+          "文法・フレーズの反復リピーティング",
+          "AIを活用したスピーキング練習と採点",
+          "学習進捗の可視化とレポート",
+        ],
+        notSolve: [
+          "語彙インプット・リスニング強化",
+          "英会話実践（Native Camp が担う）",
+          "テスト対策・資格学習",
+          "汎用教材・他英会話サービス対応",
+        ],
+      }}
+      productLogic={{
+        steps: [
+          { title: "インプット", description: "Native Camp でレッスンを受け、教材テキストを NativeGo に貼り付ける" },
+          { title: "AI解析", description: "AI が文法・フレーズ・例文・画像を自動生成" },
+          { title: "聞ける・出せる", description: "リピーティングで音と意味を一致させ、反射的に口から出せるようにする" },
+          { title: "組み立てる", description: "スピーキング練習で自分の考えを英語で生成する力を鍛える" },
+          { title: "実践", description: "次の Native Camp で実際に使い、定着を確認する" },
+        ],
+        outcome: "Native Camp の AI Speaking Test スコア向上と、実際のレッスンでの英語使用量増加",
+      }}
+      resultMetric={{
+        title: "NC AI Speaking Test スコア",
+        description: "Native Camp の AI Speaking Test で計測されるスコア。毎月定期受検し、長期的な推移を記録する。",
+      }}
+      behaviorMetrics={[
+        { title: "リピーティング回数", description: "文法・フレーズの週間リピーティング回数" },
+        { title: "スピーキング回数", description: "週間スピーキング練習回数" },
+        { title: "Native Camp 受講回数", description: "週間 Native Camp レッスン受講回数" },
+        { title: "シャドーイング時間", description: "週間シャドーイング視聴時間（分）" },
+      ]}
+    />
   )
 }

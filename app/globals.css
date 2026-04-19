@@ -4,181 +4,46 @@
 /* class-based dark mode: responds to .dark on <html> */
 @variant dark (&:where(.dark, .dark *));
 
+/* NativeGo プライマリカラー上書き */
+:root {
+  --color-primary: #E74C3C;
+  --color-primary-hover: #C0392B;
+
+  /* NativeGo 固有セマンティックカラー（チャート等） */
+  --color-grammar:  #5B6AF0;
+  --color-phrase:   #0D9488;
+  --color-speaking: #D97706;
+  --color-shadow:   #7C3AED;
+}
+
+/* フォント設定 */
+@theme inline {
+  --font-sans: var(--font-inter), var(--font-noto-sans), -apple-system, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+
 /* react-day-picker dark mode */
 .dark .rdp-root {
   --rdp-accent-color: #7B8AF5;
   --rdp-accent-background-color: rgba(123,138,245,0.15);
-  color: #E8E8E5;
+  color: var(--color-text-primary);
 }
-.dark .rdp-day_button:hover { background-color: #242422; }
-.dark .rdp-month_caption, .dark .rdp-nav { color: #E8E8E5; }
-.dark .rdp-nav button { color: #8F8F8C; }
-.dark .rdp-nav button:hover { background-color: #242422; color: #E8E8E5; }
+.dark .rdp-day_button:hover { background-color: var(--color-surface-subtle); }
+.dark .rdp-month_caption, .dark .rdp-nav { color: var(--color-text-primary); }
+.dark .rdp-nav button { color: var(--color-text-secondary); }
+.dark .rdp-nav button:hover { background-color: var(--color-surface-subtle); color: var(--color-text-primary); }
 .rdp-root {
   --rdp-day-height: 36px;  --rdp-day-width: 36px;
   --rdp-day_button-height: 34px;  --rdp-day_button-width: 34px;
 }
 
-/* ── Design Tokens ─────────────────────────────────────────── */
-:root {
-  /* Surface */
-  --bg-base:     #F7F7F6;
-  --bg-surface:  #FFFFFF;
-  --bg-elevated: #F0F0EF;
-
-  /* Text */
-  --text-primary:   #1A1A18;
-  --text-secondary: #6B6B68;
-  --text-tertiary:  #A0A09D;
-
-  /* Border */
-  --border-subtle:  rgba(0,0,0,0.08);
-  --border-default: rgba(0,0,0,0.12);
-
-  /* Accent (indigo) */
-  --accent-color:  #5B6AF0;
-  --accent-light:  #EEF0FE;
-  --accent-text:   #3D4ECC;
-
-  /* Semantic — keep for chart colors */
-  --color-grammar:  #5B6AF0;
-  --color-phrase:   #0D9488;
-  --color-speaking: #D97706;
-  --color-shadow:   #7C3AED;
-  --color-success:  #16A34A;
-  --color-error:    #EF4444;
-
-  /* Spacing */
-  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px;
-  --space-6:24px; --space-8:32px;
-
-  /* Radius */
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-full: 9999px;
-
-  /* ── shadcn/ui tokens ── */
-  --background:        #F7F7F6;
-  --foreground:        #1A1A18;
-  --card:              #FFFFFF;
-  --card-foreground:   #1A1A18;
-  --popover:           #FFFFFF;
-  --popover-foreground:#1A1A18;
-  --primary:           #5B6AF0;
-  --primary-foreground:#FFFFFF;
-  --secondary:         #F0F0EF;
-  --secondary-foreground: #1A1A18;
-  --muted:             #F0F0EF;
-  --muted-foreground:  #6B6B68;
-  --accent:            #EEF0FE;
-  --accent-foreground: #3D4ECC;
-  --destructive:       #EF4444;
-  --destructive-foreground: #FFFFFF;
-  --border:            rgba(0,0,0,0.12);
-  --input:             rgba(0,0,0,0.12);
-  --ring:              #5B6AF0;
-  --radius:            0.5rem;
-}
-
-.dark {
-  --bg-base:     #111110;
-  --bg-surface:  #1A1A18;
-  --bg-elevated: #242422;
-
-  --text-primary:   #E8E8E5;
-  --text-secondary: #8F8F8C;
-  --text-tertiary:  #5A5A57;
-
-  --border-subtle:  rgba(255,255,255,0.06);
-  --border-default: rgba(255,255,255,0.10);
-
-  --accent-color: #7B8AF5;
-  --accent-light: #1E2040;
-  --accent-text:  #A0AAFF;
-
-  --background:        #111110;
-  --foreground:        #E8E8E5;
-  --card:              #1A1A18;
-  --card-foreground:   #E8E8E5;
-  --popover:           #1A1A18;
-  --popover-foreground:#E8E8E5;
-  --primary:           #7B8AF5;
-  --primary-foreground:#FFFFFF;
-  --secondary:         #242422;
-  --secondary-foreground: #E8E8E5;
-  --muted:             #242422;
-  --muted-foreground:  #8F8F8C;
-  --accent:            #1E2040;
-  --accent-foreground: #A0AAFF;
-  --destructive:       #EF4444;
-  --destructive-foreground: #FFFFFF;
-  --border:            rgba(255,255,255,0.10);
-  --input:             rgba(255,255,255,0.10);
-  --ring:              #7B8AF5;
-}
-
-@theme inline {
-  --color-background:         var(--background);
-  --color-foreground:         var(--foreground);
-  --color-card:               var(--card);
-  --color-card-foreground:    var(--card-foreground);
-  --color-popover:            var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary:            var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary:          var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted:              var(--muted);
-  --color-muted-foreground:   var(--muted-foreground);
-  --color-accent:             var(--accent);
-  --color-accent-foreground:  var(--accent-foreground);
-  --color-destructive:        var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border:             var(--border);
-  --color-input:              var(--input);
-  --color-ring:               var(--ring);
-  --font-sans: var(--font-inter), var(--font-noto-sans), -apple-system, sans-serif;
-  --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
-
-  /* Typography scale (+15%) */
-  --font-size-xs:   13px;
-  --font-size-sm:   15px;
-  --font-size-base: 16px;
-  --font-size-lg:   18px;
-  --font-size-xl:   25px;
-  --font-size-2xl:  32px;
-  --font-size-3xl:  32px;
-}
-
-@layer base {
-  * {
-    border-color: var(--border);
-    outline-color: var(--ring);
-  }
-  body {
-    background-color: var(--background);
-    color: var(--foreground);
-    font-family: var(--font-sans);
-    font-size: 16px;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-}
-
-/* ── Utility classes ───────────────────────────────────────── */
 @layer utilities {
   .section-label {
     font-size: 13px;
     font-weight: 500;
-    color: var(--text-tertiary, #A0A09D);
+    color: var(--color-text-subtle, #8993a4);
     letter-spacing: 0.05em;
     text-transform: uppercase;
     margin-bottom: 12px;
-  }
-  /* Override dark-mode hardcoded sidebar classes */
-  .sidebar-bg {
-    background-color: var(--card);
-    border-right: 1px solid var(--border);
   }
 }

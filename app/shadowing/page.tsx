@@ -2,9 +2,10 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Dialog } from "@/components/ui/dialog"
+import {
+  Button, Input,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@takaki/go-design-system"
 import { Plus, ExternalLink, CheckCircle, Archive, ArchiveRestore, ChevronDown, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
@@ -362,49 +363,55 @@ export default function ShadowingPage() {
       {/* Add channel modal */}
       <Dialog
         open={showAddModal}
-        onClose={() => {
-          setShowAddModal(false)
-          setChannelUrl("")
-          setSinceYear("")
-          setFetchError("")
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowAddModal(false)
+            setChannelUrl("")
+            setSinceYear("")
+            setFetchError("")
+          }
         }}
-        title="チャンネルを追加"
       >
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">チャンネルURL</label>
-            <Input
-              value={channelUrl}
-              onChange={(e) => setChannelUrl(e.target.value)}
-              placeholder="https://www.youtube.com/@ChannelName"
-              onKeyDown={(e) => { if (e.key === "Enter") handleFetchChannel() }}
-            />
-            <p className="text-xs text-muted-foreground">
-              例: https://www.youtube.com/@EnglishWithVenya<br />
-              ※ 3分未満の動画は自動的に除外されます
-            </p>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>チャンネルを追加</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">チャンネルURL</label>
+              <Input
+                value={channelUrl}
+                onChange={(e) => setChannelUrl(e.target.value)}
+                placeholder="https://www.youtube.com/@ChannelName"
+                onKeyDown={(e) => { if (e.key === "Enter") handleFetchChannel() }}
+              />
+              <p className="text-xs text-muted-foreground">
+                例: https://www.youtube.com/@EnglishWithVenya<br />
+                ※ 3分未満の動画は自動的に除外されます
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">取得開始年（任意）</label>
+              <Input
+                value={sinceYear}
+                onChange={(e) => setSinceYear(e.target.value)}
+                placeholder="例: 2020"
+                maxLength={4}
+              />
+              <p className="text-xs text-muted-foreground">
+                入力した年以降の動画のみ取得します
+              </p>
+            </div>
+            {fetchError && <p className="text-sm text-destructive">{fetchError}</p>}
+            <Button
+              onClick={handleFetchChannel}
+              disabled={fetching || !channelUrl.trim()}
+              className="w-full"
+            >
+              {fetching ? "取得中..." : "動画を取得する"}
+            </Button>
           </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">取得開始年（任意）</label>
-            <Input
-              value={sinceYear}
-              onChange={(e) => setSinceYear(e.target.value)}
-              placeholder="例: 2020"
-              maxLength={4}
-            />
-            <p className="text-xs text-muted-foreground">
-              入力した年以降の動画のみ取得します
-            </p>
-          </div>
-          {fetchError && <p className="text-sm text-destructive">{fetchError}</p>}
-          <Button
-            onClick={handleFetchChannel}
-            disabled={fetching || !channelUrl.trim()}
-            className="w-full"
-          >
-            {fetching ? "取得中..." : "動画を取得する"}
-          </Button>
-        </div>
+        </DialogContent>
       </Dialog>
     </div>
   )

@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from "react"
 import { useSearchParams, useParams, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import { Button } from "@/components/ui/button"
+import { Button } from "@takaki/go-design-system"
 import { Loader2, CheckCircle2, Volume2, BookOpen } from "lucide-react"
 
 const SCORE_LABELS = ["語彙", "文法", "流暢さ", "発音"]

@@ -2,13 +2,12 @@
 
 import { useEffect, useState, useCallback, useRef } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Dialog } from "@/components/ui/dialog"
+import {
+  Button, Badge, Textarea,
+  Card, CardContent, CardHeader, CardTitle, CardDescription,
+  Separator, Tabs, TabsContent, TabsList, TabsTrigger,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@takaki/go-design-system"
 import { toast } from "sonner"
 import { saveGrammar, saveExpressions, updateLessonStatus } from "@/app/actions/practice"
 import type { Lesson, ExtractResult, ExtractedGrammar, ExtractedExpression } from "@/lib/types"
@@ -277,7 +276,11 @@ function AddModal({
   }
 
   return (
-    <Dialog open onClose={onClose} title="テキスト追加" className="max-w-2xl">
+    <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>テキスト追加</DialogTitle>
+        </DialogHeader>
       <div className="space-y-5">
 
         {/* ── 抽出完了後: レッスン情報 + 結果のみ ── */}
@@ -383,6 +386,7 @@ function AddModal({
         )}
 
       </div>
+      </DialogContent>
     </Dialog>
   )
 }

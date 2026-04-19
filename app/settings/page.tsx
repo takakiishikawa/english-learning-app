@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button, Input, SettingsGroup, SettingsItem } from "@takaki/go-design-system"
 import { toast } from "sonner"
 
 const DEFAULTS = {
@@ -16,7 +15,7 @@ const DEFAULTS = {
 
 type SettingsValues = typeof DEFAULTS
 
-export default function SettingsPage() {
+export default function SettingsRoute() {
   const supabase = createClient()
   const [values, setValues] = useState<SettingsValues>(DEFAULTS)
   const [saving, setSaving] = useState(false)
@@ -66,20 +65,17 @@ export default function SettingsPage() {
   const set = (key: keyof SettingsValues) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setValues((v) => ({ ...v, [key]: parseInt(e.target.value) || 0 }))
 
-  function FieldRow({ label, fieldKey, unit }: { label: string; fieldKey: keyof SettingsValues; unit: string }) {
+  function NumberInput({ fieldKey, unit }: { fieldKey: keyof SettingsValues; unit: string }) {
     return (
-      <div className="flex items-center justify-between py-3 border-b border-[var(--border-subtle,rgba(0,0,0,0.08))] last:border-0">
-        <span className="text-[16px] text-foreground">{label}</span>
-        <div className="flex items-center gap-2">
-          <Input
-            type="number"
-            min={0}
-            value={values[fieldKey]}
-            onChange={set(fieldKey)}
-            className="w-24 text-right"
-          />
-          <span className="text-[15px] text-muted-foreground w-12 shrink-0">{unit}</span>
-        </div>
+      <div className="flex items-center gap-2">
+        <Input
+          type="number"
+          min={0}
+          value={values[fieldKey]}
+          onChange={set(fieldKey)}
+          className="w-24 text-right"
+        />
+        <span className="text-sm text-muted-foreground w-12 shrink-0">{unit}</span>
       </div>
     )
   }
@@ -90,27 +86,22 @@ export default function SettingsPage() {
         <h1 className="text-[25px] font-medium">設定</h1>
       </div>
 
-      <section className="space-y-3">
-        <h2 className="section-label">ベースライン</h2>
-        <p className="text-[15px] text-muted-foreground leading-relaxed">
-          週間ベースラインとは、毎週維持したい最低限の学習量です。
-          目標ではなく、このペースを下回らないことを意識する基準です。
-        </p>
-        <div className="rounded-[8px] border border-[var(--border-subtle,rgba(0,0,0,0.08))] bg-card px-4">
-          <FieldRow label="リピーティング" fieldKey="baseline_repeating" unit="回/週" />
-          <FieldRow label="スピーキング"    fieldKey="baseline_speaking"  unit="回/週" />
-          <FieldRow label="Native Camp"     fieldKey="baseline_nativecamp" unit="分/週" />
-          <FieldRow label="シャドーイング"   fieldKey="baseline_shadowing"  unit="分/週" />
-        </div>
-      </section>
+      <SettingsGroup
+        title="ベースライン"
+        description="週間ベースラインとは、毎週維持したい最低限の学習量です。目標ではなく、このペースを下回らないことを意識する基準です。"
+      >
+        <SettingsItem label="リピーティング" control={<NumberInput fieldKey="baseline_repeating" unit="回/週" />} />
+        <SettingsItem label="スピーキング"    control={<NumberInput fieldKey="baseline_speaking"  unit="回/週" />} />
+        <SettingsItem label="Native Camp"     control={<NumberInput fieldKey="baseline_nativecamp" unit="分/週" />} />
+        <SettingsItem label="シャドーイング"   control={<NumberInput fieldKey="baseline_shadowing"  unit="分/週" />} />
+      </SettingsGroup>
 
-      <section className="space-y-3">
-        <h2 className="section-label">NC AI Speaking Test</h2>
-        <p className="text-[15px] text-muted-foreground">毎月何日に受けますか？</p>
-        <div className="rounded-[8px] border border-[var(--border-subtle,rgba(0,0,0,0.08))] bg-card px-4">
-          <FieldRow label="受検日" fieldKey="speaking_test_day" unit="日" />
-        </div>
-      </section>
+      <SettingsGroup
+        title="NC AI Speaking Test"
+        description="毎月何日に受けますか？"
+      >
+        <SettingsItem label="受検日" control={<NumberInput fieldKey="speaking_test_day" unit="日" />} />
+      </SettingsGroup>
 
       <Button onClick={handleSave} disabled={saving} className="w-full">
         {saving ? "保存中..." : "保存する"}

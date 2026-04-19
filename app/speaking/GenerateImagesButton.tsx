@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@takaki/go-design-system"
 import { Loader2, ImageIcon } from "lucide-react"
 import { toast } from "sonner"
 

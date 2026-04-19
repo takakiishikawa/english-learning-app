@@ -2,17 +2,12 @@
 
 import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { Badge } from "@/components/ui/badge"
-import { Dialog } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+  Badge,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+  Tabs, TabsContent, TabsList, TabsTrigger,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@takaki/go-design-system"
 import type { Grammar, Expression } from "@/lib/types"
 
 type GrammarWithLesson = Grammar & { lessons: { lesson_no: string } | null }
@@ -108,27 +103,32 @@ function GrammarTab() {
       </div>
 
       {selected && (
-        <Dialog open={!!selected} onClose={() => setSelected(null)} title={selected.name}>
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">簡易解説</p>
-              <p className="text-sm">{selected.summary}</p>
-            </div>
-            {selected.detail && (
+        <Dialog open={!!selected} onOpenChange={(open) => { if (!open) setSelected(null) }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{selected.name}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
               <div>
-                <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">詳細解説</p>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{selected.detail}</p>
+                <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">簡易解説</p>
+                <p className="text-sm">{selected.summary}</p>
               </div>
-            )}
-            <div>
-              <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-2">例文</p>
-              <ul className="space-y-2">
-                {selected.examples.split("\n").filter(Boolean).map((ex, i) => (
-                  <li key={i} className="rounded-lg bg-muted px-3 py-2 text-sm">{ex}</li>
-                ))}
-              </ul>
+              {selected.detail && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">詳細解説</p>
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{selected.detail}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-2">例文</p>
+                <ul className="space-y-2">
+                  {selected.examples.split("\n").filter(Boolean).map((ex, i) => (
+                    <li key={i} className="rounded-lg bg-muted px-3 py-2 text-sm">{ex}</li>
+                  ))}
+                </ul>
+              </div>
             </div>
-          </div>
+          </DialogContent>
         </Dialog>
       )}
     </div>
@@ -199,39 +199,44 @@ function PhraseTab() {
       </div>
 
       {selected && (
-        <Dialog open={!!selected} onClose={() => setSelected(null)} title={selected.expression}>
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground whitespace-pre-line">{selected.meaning}</p>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-2">会話</p>
-              <div className="space-y-2">
-                {selected.conversation.split("\n").filter(Boolean).map((line, i) => {
-                  const isA = line.startsWith("A:")
-                  return (
-                    <div
-                      key={i}
-                      className={`rounded-lg px-3 py-2 text-sm ${
-                        isA
-                          ? "bg-blue-50 dark:bg-blue-900/30 text-blue-900 dark:text-blue-200"
-                          : "bg-amber-50 dark:bg-amber-900/30 text-amber-900 dark:text-amber-200"
-                      }`}
-                    >
-                      {line}
-                    </div>
-                  )
-                })}
+        <Dialog open={!!selected} onOpenChange={(open) => { if (!open) setSelected(null) }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{selected.expression}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground whitespace-pre-line">{selected.meaning}</p>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-2">会話</p>
+                <div className="space-y-2">
+                  {selected.conversation.split("\n").filter(Boolean).map((line, i) => {
+                    const isA = line.startsWith("A:")
+                    return (
+                      <div
+                        key={i}
+                        className={`rounded-lg px-3 py-2 text-sm ${
+                          isA
+                            ? "bg-blue-50 dark:bg-blue-900/30 text-blue-900 dark:text-blue-200"
+                            : "bg-amber-50 dark:bg-amber-900/30 text-amber-900 dark:text-amber-200"
+                        }`}
+                      >
+                        {line}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+              <div className="flex items-center gap-4 pt-2 border-t">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">使用頻度</span>
+                  <StarRating value={selected.frequency} />
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  練習回数: {selected.play_count} / 10
+                </span>
               </div>
             </div>
-            <div className="flex items-center gap-4 pt-2 border-t">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">使用頻度</span>
-                <StarRating value={selected.frequency} />
-              </div>
-              <span className="text-xs text-muted-foreground">
-                練習回数: {selected.play_count} / 10
-              </span>
-            </div>
-          </div>
+          </DialogContent>
         </Dialog>
       )}
     </div>

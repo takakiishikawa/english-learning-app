@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@takaki/go-design-system"
 import { COLORS } from "@/lib/colors"
 
 type DataPoint = { date: string; grammar: number; expression: number }

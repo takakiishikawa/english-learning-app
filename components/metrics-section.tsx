@@ -3,8 +3,7 @@
 import { useState } from "react"
 import { NativeCampModal } from "@/components/native-camp-modal"
 import { SpeakingScoreModal } from "@/components/speaking-score-modal"
-import { PencilSquareIcon } from "@heroicons/react/24/outline"
-import { TrendingUp, TrendingDown } from "lucide-react"
+import { TrendingUp, TrendingDown, Pencil } from "lucide-react"
 import type { SpeakingScore } from "@/lib/types"
 
 interface BaselineSettings {
@@ -137,7 +136,7 @@ export function MetricsSection({
       onClick={onClick}
       className="rounded p-0.5 hover:bg-muted-foreground/10 transition-colors text-muted-foreground hover:text-foreground"
     >
-      <PencilSquareIcon className="h-3.5 w-3.5" />
+      <Pencil className="h-3.5 w-3.5" />
     </button>
   )
 

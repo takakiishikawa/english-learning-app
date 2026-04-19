@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
+import { Button } from "@takaki/go-design-system"
 import { Loader2, CheckCircle2 } from "lucide-react"
 import type { PastLog } from "./page"
 

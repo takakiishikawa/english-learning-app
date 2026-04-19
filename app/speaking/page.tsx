@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
-import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Card, Badge } from "@takaki/go-design-system"
 import { GenerateImagesButton } from "./GenerateImagesButton"
 
 export default async function SpeakingPage() {

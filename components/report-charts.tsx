@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@takaki/go-design-system"
 import { LineChart, type LineChartPoint, type LineChartSeries } from "@/components/line-chart"
 
 type PracticeLog = {
