@@ -22,7 +22,7 @@ function LoginContent() {
     <LoginPage
       productName="NativeGo"
       productLogo={
-        <div className="flex items-center justify-center rounded-[6px] bg-primary p-2">
+        <div className="flex items-center justify-center rounded-md bg-primary p-2">
           <RefreshCcw className="h-4 w-4 text-white" />
         </div>
       }

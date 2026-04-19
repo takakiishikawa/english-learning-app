@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react"
 import { createClient } from "@/lib/supabase/client"
 import {
-  Button, Badge, Textarea,
+  Button, Badge, Input, Textarea,
   Card, CardContent, CardHeader, CardTitle, CardDescription,
   Separator, Tabs, TabsContent, TabsList, TabsTrigger,
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -152,9 +152,8 @@ function LessonCombobox({
 
   return (
     <div ref={containerRef} className="relative">
-      <input
+      <Input
         type="text"
-        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         placeholder="レッスン番号またはトピックで検索..."
         value={open ? query : (selected ? `${selected.lesson_no} — ${selected.topic}` : "")}
         onFocus={() => { setQuery(""); setOpen(true) }}
@@ -418,7 +417,7 @@ function LessonList({
         return (
           <div
             key={lesson.id}
-            className="flex items-center gap-4 rounded-lg border bg-white dark:bg-card px-4 py-3"
+            className="flex items-center gap-4 rounded-lg border bg-card px-4 py-3"
           >
             <span className="font-mono text-sm font-medium w-16 text-muted-foreground">
               {lesson.lesson_no}

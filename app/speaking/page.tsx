@@ -63,7 +63,7 @@ export default async function SpeakingPage() {
             const lesson = Array.isArray(g.lessons) ? g.lessons[0] : g.lessons
             return (
               <Link key={g.id} href={`/speaking/${g.id}`}>
-                <Card className="cursor-pointer hover:shadow-sm hover:border-[var(--border-default)] transition-all overflow-hidden group p-0 border-[var(--border-subtle,rgba(0,0,0,0.08))] shadow-none">
+                <Card className="cursor-pointer hover:shadow-sm hover:border-[--color-border-default] transition-all overflow-hidden group p-0 border-[--color-border-subtle] shadow-none">
                   <div className="aspect-[4/3] overflow-hidden relative">
                     <img
                       src={g.image_url!}

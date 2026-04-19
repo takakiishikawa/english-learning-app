@@ -6,7 +6,7 @@ export default function ConceptRoute() {
     <ConceptPage
       productName="NativeGo"
       productLogo={
-        <div className="flex items-center justify-center rounded-[6px] bg-primary p-1.5">
+        <div className="flex items-center justify-center rounded-md bg-primary p-1.5">
           <RefreshCcw className="h-3.5 w-3.5 text-white" />
         </div>
       }

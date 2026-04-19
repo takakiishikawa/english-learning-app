@@ -19,9 +19,9 @@ function PracticeCard({
   return (
     <button
       onClick={onClick}
-      className="group w-full text-left flex flex-col items-center gap-3 rounded-[12px] border border-[var(--border-subtle,rgba(0,0,0,0.08))] bg-card px-4 py-5 hover:border-[var(--border-default,rgba(0,0,0,0.12))] hover:shadow-sm transition-all"
+      className="group w-full text-left flex flex-col items-center gap-3 rounded-xl border border-[--color-border-subtle] bg-card px-4 py-5 hover:border-[--color-border-default] hover:shadow-sm transition-all"
     >
-      <div className={`rounded-[8px] p-2.5 ${iconBg}`}>
+      <div className={`rounded-lg p-2.5 ${iconBg}`}>
         <span className={iconColor}>{icon}</span>
       </div>
       <p className="text-[15px] font-medium text-foreground text-center leading-snug">{title}</p>

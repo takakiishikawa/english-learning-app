@@ -228,7 +228,7 @@ export default function ShadowingPage() {
                       "pl-4 pr-8 py-1.5 rounded-full text-sm font-medium transition-colors",
                       selectedChannelId === ch.id
                         ? "bg-primary text-primary-foreground"
-                        : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
                     )}
                   >
                     {ch.channel_name}
@@ -240,7 +240,7 @@ export default function ShadowingPage() {
                       "absolute right-2 p-0.5 rounded transition-opacity",
                       selectedChannelId === ch.id
                         ? "opacity-60 hover:opacity-100 text-primary-foreground"
-                        : "opacity-0 group-hover:opacity-60 hover:!opacity-100 text-neutral-500"
+                        : "opacity-0 group-hover:opacity-60 hover:!opacity-100 text-muted-foreground"
                     )}
                   >
                     <Archive className="h-3 w-3" />
@@ -270,7 +270,7 @@ export default function ShadowingPage() {
                           "pl-4 pr-8 py-1.5 rounded-full text-sm font-medium transition-colors opacity-60",
                           selectedChannelId === ch.id
                             ? "bg-primary text-primary-foreground opacity-100"
-                            : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400"
+                            : "bg-muted text-muted-foreground"
                         )}
                       >
                         {ch.channel_name}
@@ -278,7 +278,7 @@ export default function ShadowingPage() {
                       <button
                         onClick={() => handleArchiveChannel(ch.id, false)}
                         title="アーカイブ解除"
-                        className="absolute right-2 p-0.5 rounded opacity-0 group-hover:opacity-60 hover:!opacity-100 text-neutral-500 transition-opacity"
+                        className="absolute right-2 p-0.5 rounded opacity-0 group-hover:opacity-60 hover:!opacity-100 text-muted-foreground transition-opacity"
                       >
                         <ArchiveRestore className="h-3 w-3" />
                       </button>
@@ -294,7 +294,7 @@ export default function ShadowingPage() {
             <>
               {/* Archive notice */}
               {selectedChannel?.archived && (
-                <div className="flex items-center gap-2 rounded-[8px] bg-muted px-4 py-2.5 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 rounded-lg bg-muted px-4 py-2.5 text-xs text-muted-foreground">
                   <Archive className="h-3.5 w-3.5 shrink-0" />
                   このチャンネルはアーカイブ済みです
                 </div>
@@ -303,7 +303,7 @@ export default function ShadowingPage() {
               {/* Progress */}
               {allVideos.length > 0 && (
                 <div className="flex items-center gap-3">
-                  <div className="flex-1 bg-neutral-200 dark:bg-neutral-700 rounded-full h-1.5">
+                  <div className="flex-1 bg-muted rounded-full h-1.5">
                     <div
                       className="bg-primary h-1.5 rounded-full transition-all duration-500"
                       style={{ width: `${pct}%` }}
@@ -452,12 +452,12 @@ function VideoCard({
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "group rounded-xl border border-[var(--border-subtle,rgba(0,0,0,0.08))] bg-card overflow-hidden shadow-sm flex flex-col transition-all cursor-pointer",
-        "hover:shadow-md hover:-translate-y-0.5"
+        "group rounded-xl border border-[--color-border-subtle] bg-card overflow-hidden flex flex-col transition-all cursor-pointer",
+        "hover:border-[--color-border-default] hover:-translate-y-0.5"
       )}
     >
       {/* Thumbnail */}
-      <div className="aspect-video bg-neutral-100 dark:bg-neutral-800 relative overflow-hidden">
+      <div className="aspect-video bg-muted relative overflow-hidden">
         {video.thumbnail_url ? (
           <img
             src={video.thumbnail_url}
@@ -496,7 +496,7 @@ function VideoCard({
           <p className={cn(
             "text-sm font-medium line-clamp-2 leading-snug transition-colors",
             isCompleted
-              ? "text-[var(--text-tertiary,#A0A09D)]"
+              ? "text-muted-foreground"
               : "group-hover:text-primary"
           )}>
             {video.title}
@@ -504,7 +504,7 @@ function VideoCard({
           {video.duration && (
             <p className={cn(
               "text-xs mt-1",
-              isCompleted ? "text-[var(--text-tertiary,#A0A09D)]" : "text-muted-foreground"
+              isCompleted ? "text-muted-foreground/60" : "text-muted-foreground"
             )}>
               {video.duration}
             </p>
@@ -514,21 +514,23 @@ function VideoCard({
         {/* Action button */}
         <div>
           {isCompleted ? (
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={handleComplete}
               disabled={marking}
-              className="rounded-md border border-[var(--border-default,rgba(0,0,0,0.12))] bg-transparent hover:bg-muted px-3 py-1 text-xs font-medium text-[var(--text-secondary,#6B6B68)] transition-colors disabled:opacity-50"
             >
               {marking ? "記録中..." : `もう1回 (${video.lapCount + 1}回目)`}
-            </button>
+            </Button>
           ) : (
-            <button
+            <Button
+              size="sm"
               onClick={handleComplete}
               disabled={marking}
-              className="w-full rounded-md bg-primary hover:bg-primary/90 text-primary-foreground px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50"
+              className="w-full"
             >
               {marking ? "記録中..." : "見た"}
-            </button>
+            </Button>
           )}
         </div>
       </div>

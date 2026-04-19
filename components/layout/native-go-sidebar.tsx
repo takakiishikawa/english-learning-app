@@ -168,7 +168,7 @@ export function NativeGoSidebar() {
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" asChild>
                 <Link href="/">
-                  <div className="flex items-center justify-center rounded-[6px] bg-primary p-1.5 shrink-0">
+                  <div className="flex items-center justify-center rounded-md bg-primary p-1.5 shrink-0">
                     <RefreshCcw className="h-3.5 w-3.5 text-white" />
                   </div>
                   <span className="text-[16px] font-medium tracking-tight">NativeGo</span>
