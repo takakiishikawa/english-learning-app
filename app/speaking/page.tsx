@@ -3,10 +3,30 @@ import Link from "next/link"
 import { Card, Badge, PageHeader } from "@takaki/go-design-system"
 import { GenerateImagesButton } from "./GenerateImagesButton"
 
+const SESSIONS_REQUIRED = 3
+
+function SessionDots({ count }: { count: number }) {
+  return (
+    <div className="flex items-center gap-1">
+      {Array.from({ length: SESSIONS_REQUIRED }).map((_, i) => (
+        <span
+          key={i}
+          className={`inline-block w-2 h-2 rounded-full transition-colors ${
+            i < count
+              ? "bg-[color:var(--color-grammar)]"
+              : "bg-muted-foreground/20"
+          }`}
+        />
+      ))}
+    </div>
+  )
+}
+
 export default async function SpeakingPage() {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
-  const [{ data: grammars }, { data: pendingGrammars }] = await Promise.all([
+  const [{ data: grammars }, { data: pendingGrammars }, { data: speakingLogs }] = await Promise.all([
     supabase
       .from("grammar")
       .select("id, name, summary, image_url, play_count, lessons!lesson_id(lesson_no)")
@@ -18,10 +38,18 @@ export default async function SpeakingPage() {
       .select("id, name")
       .is("image_url", null)
       .order("created_at", { ascending: false }),
+    user
+      ? supabase.from("speaking_logs").select("grammar_id").eq("user_id", user.id)
+      : Promise.resolve({ data: [] }),
   ])
 
-  const allWithImages = (grammars ?? []).map(g => ({ id: g.id, name: g.name }))
+  // grammar_id ごとのセッション数を集計
+  const sessionCounts = new Map<string, number>()
+  for (const log of speakingLogs ?? []) {
+    sessionCounts.set(log.grammar_id, (sessionCounts.get(log.grammar_id) ?? 0) + 1)
+  }
 
+  const allWithImages = (grammars ?? []).map(g => ({ id: g.id, name: g.name }))
   const items = grammars ?? []
   const pending = pendingGrammars ?? []
 
@@ -59,9 +87,10 @@ export default async function SpeakingPage() {
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {items.map((g) => {
             const lesson = Array.isArray(g.lessons) ? g.lessons[0] : g.lessons
+            const sessions = Math.min(sessionCounts.get(g.id) ?? 0, SESSIONS_REQUIRED)
             return (
               <Link key={g.id} href={`/speaking/${g.id}`}>
-                <Card className="cursor-pointer hover:shadow-sm hover:border-[var(--color-border-default)] transition-all overflow-hidden group p-0 border-[var(--color-border-subtle)] shadow-none">
+                <Card className="cursor-pointer hover:shadow-md hover:border-[var(--color-border-default)] transition-all overflow-hidden group p-0 border-[var(--color-border-default)] shadow-sm">
                   <div className="aspect-[4/3] overflow-hidden relative">
                     <img
                       src={g.image_url!}
@@ -69,16 +98,18 @@ export default async function SpeakingPage() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
-                  <div className="p-4 space-y-1.5">
-                    {lesson && (
-                      <Badge variant="outline">
-                        No.{(lesson as { lesson_no: string }).lesson_no}
-                      </Badge>
-                    )}
-                    <p className="font-semibold text-base text-foreground leading-snug line-clamp-2">
+                  <div className="p-3 space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      {lesson ? (
+                        <Badge variant="outline">
+                          No.{(lesson as { lesson_no: string }).lesson_no}
+                        </Badge>
+                      ) : <span />}
+                      <SessionDots count={sessions} />
+                    </div>
+                    <p className="font-semibold text-sm text-foreground leading-snug line-clamp-2">
                       {g.name}
                     </p>
-                    <p className="text-sm text-muted-foreground line-clamp-2">{g.summary}</p>
                   </div>
                 </Card>
               </Link>

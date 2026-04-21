@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextRequest, NextResponse } from "next/server"
 
-export const maxDuration = 60
+export const maxDuration = 300
 
 export async function POST(request: NextRequest) {
   console.log("[generate-images] リクエスト受信")

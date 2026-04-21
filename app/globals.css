@@ -13,6 +13,21 @@
   --color-speaking:        #D97706;
   --color-shadow:          #7C3AED;
   --color-primary-chart-2: #6699FF;
+
+  /* Sidebar accent: primary-tinted background for hover/active/current-page */
+  --color-sidebar-accent:            #DEEBFF;
+  --color-sidebar-accent-foreground: #0052CC;
+  --color-sidebar-foreground:        var(--color-text-primary);
+  --color-sidebar-background:        var(--color-surface);
+  --color-sidebar-border:            var(--color-border-subtle);
+  --color-sidebar-ring:              var(--color-primary);
+  --color-sidebar-primary:           var(--color-primary);
+  --color-sidebar-primary-foreground: var(--color-primary-text);
+}
+
+.dark {
+  --color-sidebar-accent:            #1B2E52;
+  --color-sidebar-accent-foreground: #85B8FF;
 }
 
 /* ベースカラー — ダークモードで見出しが消えないよう本文色を継承させる */
@@ -21,12 +36,34 @@
     color: var(--foreground);
     background-color: var(--background);
   }
+
+  /* すべてのインタラクティブ要素にポインターカーソルを適用 */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
+  /* ボタン押下時のフィードバック */
+  button:not(:disabled):active {
+    filter: brightness(0.88);
+    transform: translateY(0.5px);
+  }
 }
 
-/* フォント設定 */
+/* フォント設定 + サイドバートークンをTailwindテーマに登録 */
 @theme inline {
   --font-sans: var(--font-inter), var(--font-noto-sans), -apple-system, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  /* sidebar-* ユーティリティが参照するトークン */
+  --color-sidebar-accent:            var(--color-sidebar-accent);
+  --color-sidebar-accent-foreground: var(--color-sidebar-accent-foreground);
+  --color-sidebar-foreground:        var(--color-sidebar-foreground);
+  --color-sidebar-background:        var(--color-sidebar-background);
+  --color-sidebar-border:            var(--color-sidebar-border);
+  --color-sidebar-ring:              var(--color-sidebar-ring);
+  --color-sidebar-primary:           var(--color-sidebar-primary);
+  --color-sidebar-primary-foreground: var(--color-sidebar-primary-foreground);
 }
 
 /* react-day-picker dark mode */

@@ -452,8 +452,8 @@ function VideoCard({
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "group rounded-lg border border-[var(--color-border-subtle)] bg-card overflow-hidden flex flex-col transition-all cursor-pointer",
-        "hover:border-[var(--color-border-default)] hover:-translate-y-0.5"
+        "group relative rounded-lg border border-[var(--color-border-default)] bg-card overflow-hidden flex flex-col transition-all cursor-pointer shadow-sm",
+        "hover:border-[var(--color-border-strong)] hover:shadow-md hover:-translate-y-0.5"
       )}
     >
       {/* Thumbnail */}
@@ -484,50 +484,49 @@ function VideoCard({
           onClick={handleDelete}
           disabled={deleting}
           title="削除"
-          className="absolute top-2 left-2 p-1 rounded-full bg-black/40 text-white opacity-0 group-hover:opacity-100 hover:bg-black/60 transition-all disabled:opacity-30"
+          className="absolute top-2 left-2 p-1 rounded-full bg-black/40 text-white opacity-0 group-hover:opacity-100 hover:bg-black/60 transition-all disabled:opacity-30 cursor-pointer"
         >
           <Trash2 className="h-3 w-3" />
         </button>
       </div>
 
-      <div className="p-4 flex flex-col gap-3 flex-1">
-        {/* Title + duration */}
-        <div className="flex-1">
+      {/* Title + duration */}
+      <div className="px-3 pt-3 pb-10">
+        <p className={cn(
+          "text-sm font-medium line-clamp-2 leading-snug transition-colors",
+          isCompleted
+            ? "text-muted-foreground"
+            : "group-hover:text-primary"
+        )}>
+          {video.title}
+        </p>
+        {video.duration && (
           <p className={cn(
-            "text-sm font-medium line-clamp-2 leading-snug transition-colors",
-            isCompleted
-              ? "text-muted-foreground"
-              : "group-hover:text-primary"
+            "text-xs mt-1",
+            isCompleted ? "text-muted-foreground/60" : "text-muted-foreground"
           )}>
-            {video.title}
+            {video.duration}
           </p>
-          {video.duration && (
-            <p className={cn(
-              "text-xs mt-1",
-              isCompleted ? "text-muted-foreground/60" : "text-muted-foreground"
-            )}>
-              {video.duration}
-            </p>
-          )}
-        </div>
+        )}
+      </div>
 
-        {/* Action button */}
-        <div>
-          {isCompleted ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleComplete}
-              disabled={marking}
-            >
-              {marking ? "記録中..." : `もう1回 (${video.lapCount + 1}回目)`}
-            </Button>
-          ) : (
-            <Button size="sm" onClick={handleComplete} disabled={marking}>
-              {marking ? "記録中..." : "見た"}
-            </Button>
-          )}
-        </div>
+      {/* Action button - bottom right */}
+      <div className="absolute bottom-2.5 right-2.5">
+        {isCompleted ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleComplete}
+            disabled={marking}
+            className="cursor-pointer"
+          >
+            {marking ? "記録中..." : `もう1回 (${video.lapCount + 1}回目)`}
+          </Button>
+        ) : (
+          <Button size="sm" onClick={handleComplete} disabled={marking} className="cursor-pointer">
+            {marking ? "記録中..." : "見た"}
+          </Button>
+        )}
       </div>
     </a>
   )
