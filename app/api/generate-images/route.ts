@@ -40,7 +40,6 @@ export async function POST(request: NextRequest) {
   console.log("[generate-images] APIキー確認: OK")
 
   const results = []
-  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
   for (const item of items) {
     console.log(`[generate-images] 処理開始: ${item.name} (${item.id})`)
@@ -73,39 +72,29 @@ The ONLY text allowed is the single digit panel numbers
 (1, 2, 3, 4) inside each panel corner.
 Warm illustration style, clean lines, no photorealism.`
 
-      let response: Response | null = null
-      for (let attempt = 0; attempt < 3; attempt++) {
-        if (attempt > 0) {
-          const wait = attempt * 15000
-          console.log(`[generate-images] 429 リトライ待機 ${wait / 1000}s (${item.name})`)
-          await sleep(wait)
+      console.log(`[generate-images] Imagen API呼び出し中: ${item.name}`)
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-fast-generate-001:predict?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            instances: [{ prompt: imagePrompt }],
+            parameters: { sampleCount: 1 },
+          }),
         }
-        console.log(`[generate-images] Imagen API呼び出し中: ${item.name} (attempt ${attempt + 1})`)
-        response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-fast-generate-001:predict?key=${apiKey}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              instances: [{ prompt: imagePrompt }],
-              parameters: { sampleCount: 1 },
-            }),
-          }
-        )
-        if (response.status !== 429) break
-      }
+      )
 
-      console.log(`[generate-images] APIレスポンス status: ${response!.status} (${item.name})`)
+      console.log(`[generate-images] APIレスポンス status: ${response.status} (${item.name})`)
 
-      if (!response!.ok) {
-        const errText = await response!.text()
-        console.error(`[generate-images] APIエラー ${response!.status} (${item.name}):`, errText)
-        results.push({ id: item.id, status: "error", reason: `API ${response!.status}: ${errText.slice(0, 300)}` })
-        await sleep(7000)
+      if (!response.ok) {
+        const errText = await response.text()
+        console.error(`[generate-images] APIエラー ${response.status} (${item.name}):`, errText)
+        results.push({ id: item.id, status: "error", reason: `API ${response.status}: ${errText.slice(0, 300)}` })
         continue
       }
 
-      const data = await response!.json()
+      const data = await response.json()
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const prediction = data.predictions?.[0] as any
       const imageBytes = prediction?.bytesBase64Encoded
@@ -139,7 +128,6 @@ Warm illustration style, clean lines, no photorealism.`
       console.log(`[generate-images] grammar.image_url 更新完了: ${item.name}`)
 
       results.push({ id: item.id, status: "ok" })
-      await sleep(7000)
     } catch (e) {
       console.error(`[generate-images] 例外発生 (${item.name}):`, e)
       results.push({ id: item.id, status: "error", reason: String(e) })
