@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
-import { SectionCards, PageHeader, type KpiCard, type ChartConfig } from "@takaki/go-design-system"
+import { PageHeader, type KpiCard, type ChartConfig } from "@takaki/go-design-system"
 import { DashboardChart } from "@/components/dashboard-chart"
-import { MetricModals } from "@/components/metric-modals"
+import { DashboardKpiSection } from "@/components/dashboard-kpi-section"
 import { DashboardAutoCheck } from "@/components/dashboard-auto-check"
 import { SpeakingTestReminder } from "@/components/speaking-test-reminder"
 import { StreakPopup } from "@/components/streak-popup"
@@ -314,7 +314,7 @@ export default async function HomePage() {
       )}
 
       <div>
-        <PageHeader title="ダッシュボード" description="学習進捗のまとめ" />
+        <PageHeader title="ダッシュボード" />
       </div>
 
       {/* 練習を始める */}
@@ -330,11 +330,8 @@ export default async function HomePage() {
 
       {/* 学習ログ */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="section-label mb-0">学習ログ</h2>
-          <MetricModals initialScores={scores} />
-        </div>
-        <SectionCards cards={kpiCards} />
+        <h2 className="section-label">学習ログ</h2>
+        <DashboardKpiSection cards={kpiCards} initialScores={scores} />
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <DashboardChart
             title="リピーティング（7日間）"

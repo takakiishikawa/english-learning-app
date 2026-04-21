@@ -5,8 +5,9 @@ import { createClient } from "@/lib/supabase/client"
 import {
   Button, Input, PageHeader, FormActions,
   Dialog, DialogContent, DialogHeader, DialogTitle,
+  Tabs, TabsList, TabsTrigger, Badge,
 } from "@takaki/go-design-system"
-import { Plus, ExternalLink, CheckCircle, Archive, ArchiveRestore, ChevronDown, Trash2 } from "lucide-react"
+import { Plus, ExternalLink, CheckCircle, Archive, ArchiveRestore, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import type { YoutubeChannel, YoutubeVideo } from "@/lib/types"
@@ -200,10 +201,23 @@ export default function ShadowingPage() {
         title="シャドーイング"
         description="YouTubeでシャドーイング練習を管理する"
         actions={
-          <Button onClick={() => setShowAddModal(true)} size="sm">
-            <Plus className="h-4 w-4 mr-1.5" />
-            チャンネルを追加
-          </Button>
+          <div className="flex items-center gap-2">
+            {archivedChannels.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowArchived((v) => !v)}
+              >
+                <Archive className="h-4 w-4 mr-1.5" />
+                アーカイブ済み
+                <Badge variant="outline" className="ml-1.5">{archivedChannels.length}</Badge>
+              </Button>
+            )}
+            <Button onClick={() => setShowAddModal(true)} size="sm">
+              <Plus className="h-4 w-4 mr-1.5" />
+              チャンネルを追加
+            </Button>
+          </div>
         }
       />
 
@@ -249,42 +263,31 @@ export default function ShadowingPage() {
             </div>
           )}
 
-          {/* Archived channels toggle */}
-          {archivedChannels.length > 0 && (
-            <div className="space-y-2">
-              <button
-                onClick={() => setShowArchived((v) => !v)}
-                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", showArchived && "rotate-180")} />
-                アーカイブ済み ({archivedChannels.length})
-              </button>
-              {showArchived && (
-                <div className="flex gap-2 flex-wrap items-center">
-                  {archivedChannels.map((ch) => (
-                    <div key={ch.id} className="group relative flex items-center">
-                      <button
-                        onClick={() => setSelectedChannelId(ch.id)}
-                        className={cn(
-                          "pl-4 pr-8 py-1.5 rounded-full text-sm font-medium transition-colors opacity-60",
-                          selectedChannelId === ch.id
-                            ? "bg-primary text-primary-foreground opacity-100"
-                            : "bg-muted text-muted-foreground"
-                        )}
-                      >
-                        {ch.channel_name}
-                      </button>
-                      <button
-                        onClick={() => handleArchiveChannel(ch.id, false)}
-                        title="アーカイブ解除"
-                        className="absolute right-2 p-0.5 rounded opacity-0 group-hover:opacity-60 hover:!opacity-100 text-muted-foreground transition-opacity"
-                      >
-                        <ArchiveRestore className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
+          {/* Archived channels (shown when toggled from header) */}
+          {showArchived && archivedChannels.length > 0 && (
+            <div className="flex gap-2 flex-wrap items-center">
+              {archivedChannels.map((ch) => (
+                <div key={ch.id} className="group relative flex items-center">
+                  <button
+                    onClick={() => setSelectedChannelId(ch.id)}
+                    className={cn(
+                      "pl-4 pr-8 py-1.5 rounded-full text-sm font-medium transition-colors opacity-60",
+                      selectedChannelId === ch.id
+                        ? "bg-primary text-primary-foreground opacity-100"
+                        : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {ch.channel_name}
+                  </button>
+                  <button
+                    onClick={() => handleArchiveChannel(ch.id, false)}
+                    title="アーカイブ解除"
+                    className="absolute right-2 p-0.5 rounded opacity-0 group-hover:opacity-60 hover:!opacity-100 text-muted-foreground transition-opacity"
+                  >
+                    <ArchiveRestore className="h-3 w-3" />
+                  </button>
                 </div>
-              )}
+              ))}
             </div>
           )}
 
@@ -315,27 +318,18 @@ export default function ShadowingPage() {
               )}
 
               {/* Filter tabs */}
-              <div className="flex gap-1 border-b">
-                {(
-                  [
-                    { key: "todo", label: `これから (${todoCnt})` },
-                    { key: "done", label: `見た (${doneCnt})` },
-                  ] as { key: Filter; label: string }[]
-                ).map(({ key, label }) => (
-                  <button
-                    key={key}
-                    onClick={() => setFilter(key)}
-                    className={cn(
-                      "px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px",
-                      filter === key
-                        ? "border-primary text-primary"
-                        : "border-transparent text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
+              <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
+                <TabsList>
+                  <TabsTrigger value="todo">
+                    これから
+                    <Badge variant="secondary" className="ml-2">{todoCnt}</Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="done">
+                    見た
+                    <Badge variant="secondary" className="ml-2">{doneCnt}</Badge>
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
 
               {/* Video grid */}
               {filteredVideos.length === 0 ? (
