@@ -30,20 +30,13 @@ export async function POST(request: NextRequest) {
     console.error("[generate-images] 認証エラー: ユーザーなし")
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
-  console.log("[generate-images] ユーザー:", user.id)
 
   const admin = createAdminClient()
-
   const { items, force } = await request.json() as { items: { id: string; name: string }[]; force?: boolean }
   if (!items?.length) return NextResponse.json({ results: [] })
-  console.log("[generate-images] 対象:", items.map(i => i.name).join(", "))
-  console.log("[generate-images] APIキー確認: OK")
+  console.log("[generate-images] 対象件数:", items.length)
 
-  const results = []
-
-  for (const item of items) {
-    console.log(`[generate-images] 処理開始: ${item.name} (${item.id})`)
-
+  const results = await Promise.all(items.map(async (item) => {
     const { data: existing } = await supabase
       .from("grammar")
       .select("image_url")
@@ -51,9 +44,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (existing?.image_url && !force) {
-      console.log(`[generate-images] スキップ (既存画像あり): ${item.name}`)
-      results.push({ id: item.id, status: "skipped" })
-      continue
+      return { id: item.id, status: "skipped" }
     }
 
     try {
@@ -72,9 +63,8 @@ The ONLY text allowed is the single digit panel numbers
 (1, 2, 3, 4) inside each panel corner.
 Warm illustration style, clean lines, no photorealism.`
 
-      console.log(`[generate-images] Imagen API呼び出し中: ${item.name}`)
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-fast-generate-001:predict?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -85,13 +75,10 @@ Warm illustration style, clean lines, no photorealism.`
         }
       )
 
-      console.log(`[generate-images] APIレスポンス status: ${response.status} (${item.name})`)
-
       if (!response.ok) {
         const errText = await response.text()
-        console.error(`[generate-images] APIエラー ${response.status} (${item.name}):`, errText)
-        results.push({ id: item.id, status: "error", reason: `API ${response.status}: ${errText.slice(0, 300)}` })
-        continue
+        console.error(`[generate-images] APIエラー ${response.status} (${item.name}):`, errText.slice(0, 300))
+        return { id: item.id, status: "error", reason: `API ${response.status}: ${errText.slice(0, 300)}` }
       }
 
       const data = await response.json()
@@ -101,39 +88,34 @@ Warm illustration style, clean lines, no photorealism.`
       const mimeType = prediction?.mimeType ?? "image/png"
 
       if (!imageBytes) {
-        console.error(`[generate-images] imageBytes なし。レスポンス:`, JSON.stringify(data).slice(0, 500))
-        results.push({ id: item.id, status: "error", reason: `no image data. keys: ${Object.keys(data).join(",")}` })
-        continue
+        console.error(`[generate-images] imageBytes なし (${item.name}):`, JSON.stringify(data).slice(0, 300))
+        return { id: item.id, status: "error", reason: `no image data` }
       }
-      console.log(`[generate-images] imageBytes 取得成功 (${item.name}), mimeType: ${mimeType}`)
 
       const ext = mimeType === "image/png" ? "png" : "jpg"
       const buffer = Buffer.from(imageBytes, "base64")
       const fileName = `${user.id}/${item.id}.${ext}`
 
-      console.log(`[generate-images] Supabaseアップロード開始: ${fileName}`)
       const { error: uploadError } = await admin.storage
         .from("speaking-images")
         .upload(fileName, buffer, { contentType: mimeType, upsert: true })
 
       if (uploadError) {
         console.error(`[generate-images] アップロードエラー (${item.name}):`, uploadError.message)
-        results.push({ id: item.id, status: "error", reason: uploadError.message })
-        continue
+        return { id: item.id, status: "error", reason: uploadError.message }
       }
-      console.log(`[generate-images] アップロード成功: ${fileName}`)
 
       const { data: urlData } = admin.storage.from("speaking-images").getPublicUrl(fileName)
       await admin.from("grammar").update({ image_url: urlData.publicUrl }).eq("id", item.id)
-      console.log(`[generate-images] grammar.image_url 更新完了: ${item.name}`)
+      console.log(`[generate-images] 完了: ${item.name}`)
 
-      results.push({ id: item.id, status: "ok" })
+      return { id: item.id, status: "ok" }
     } catch (e) {
-      console.error(`[generate-images] 例外発生 (${item.name}):`, e)
-      results.push({ id: item.id, status: "error", reason: String(e) })
+      console.error(`[generate-images] 例外 (${item.name}):`, e)
+      return { id: item.id, status: "error", reason: String(e) }
     }
-  }
+  }))
 
-  console.log("[generate-images] 完了:", JSON.stringify(results))
+  console.log("[generate-images] バッチ完了:", JSON.stringify(results))
   return NextResponse.json({ results })
 }
