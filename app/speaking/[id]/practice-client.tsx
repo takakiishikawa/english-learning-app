@@ -203,6 +203,11 @@ export function PracticeClient({
         </span>
       </div>
 
+      {/* Instruction */}
+      <p className="text-sm font-medium text-muted-foreground">
+        1〜4のイラストを見て、英語でストーリーを話してください
+      </p>
+
       {/* Image */}
       <div className="-mx-6 bg-muted/30 flex items-center justify-center overflow-hidden max-h-[60vh]">
         <img src={imageUrl} alt={grammarName} className="w-full max-h-[60vh] object-contain" />

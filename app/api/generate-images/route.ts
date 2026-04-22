@@ -48,20 +48,18 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const imagePrompt = `A 2x2 four-panel comic strip set in Ho Chi Minh City.
-Each panel is numbered 1-4 in the top-left corner of the panel itself.
-The story naturally demonstrates the grammar point: ${item.name}.
+      const imagePrompt = `Four sequential illustration panels arranged in a 2x2 grid, showing a wordless visual story that demonstrates the concept: ${item.name}.
 
-Panel 1 (top-left): Establishing the scene and characters.
-Panel 2 (top-right): A situation arises.
-Panel 3 (bottom-left): Characters interact or react.
-Panel 4 (bottom-right): Resolution.
+Panel 1 (top-left): Establish the scene and introduce the characters.
+Panel 2 (top-right): A situation arises naturally.
+Panel 3 (bottom-left): Characters interact or react to the situation.
+Panel 4 (bottom-right): The story reaches a resolution.
 
-CRITICAL: Absolutely NO text, NO speech bubbles, NO captions,
-NO labels, NO written words of ANY kind anywhere in the image.
-The ONLY text allowed is the single digit panel numbers
-(1, 2, 3, 4) inside each panel corner.
-Warm illustration style, clean lines, no photorealism.`
+The setting is everyday urban life. Characters are consistent across all 4 panels. Clear visible borders separate each panel.
+
+ABSOLUTELY NO text, NO letters, NO numbers, NO words, NO speech bubbles, NO thought bubbles, NO signs with writing, NO captions, NO labels of any kind anywhere in the image. Pure visual storytelling only.
+
+Warm, simple illustration style. Clean lines. Not photorealistic.`
 
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`,
