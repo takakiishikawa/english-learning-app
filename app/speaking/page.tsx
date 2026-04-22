@@ -40,14 +40,7 @@ export default async function SpeakingPage() {
       <PageHeader
         title="スピーキング"
         description="画像を見ながら英語で説明する練習"
-        actions={allWithImages.length > 0 ? (
-          <GenerateImagesButton
-            items={allWithImages}
-            force
-            label="全画像を再生成"
-            variant="outline"
-          />
-        ) : undefined}
+        actions={undefined}
       />
 
       {pending.length > 0 && (
