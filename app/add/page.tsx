@@ -13,7 +13,7 @@ import {
   Separator,
   PageHeader,
 } from "@takaki/go-design-system";
-import { toast } from "sonner";
+import { toast } from "@takaki/go-design-system";
 import { saveGrammar, saveExpressions } from "@/app/actions/practice";
 import type {
   ExtractResult,

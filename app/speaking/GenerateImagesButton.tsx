@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { Button } from "@takaki/go-design-system";
 import { Loader2, ImageIcon, X } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@takaki/go-design-system";
 
 const BATCH_SIZE = 5;
 const BATCH_WAIT_SECS = 60;

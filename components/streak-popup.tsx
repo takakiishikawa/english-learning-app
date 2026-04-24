@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { toast } from "sonner";
+import { toast } from "@takaki/go-design-system";
 
 function getMessage(streak: number): string {
   if (streak >= 30)

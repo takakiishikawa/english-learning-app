@@ -27,7 +27,7 @@ import {
   DialogTitle,
 } from "@takaki/go-design-system";
 import type { ColumnDef } from "@tanstack/react-table";
-import { toast } from "sonner";
+import { toast } from "@takaki/go-design-system";
 import {
   saveGrammar,
   saveExpressions,

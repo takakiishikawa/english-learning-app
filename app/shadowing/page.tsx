@@ -25,7 +25,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
+import { toast } from "@takaki/go-design-system";
 import type { YoutubeChannel, YoutubeVideo } from "@/lib/types";
 
 type VideoWithLap = YoutubeVideo & { lapCount: number };

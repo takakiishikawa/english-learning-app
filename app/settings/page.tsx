@@ -9,7 +9,7 @@ import {
   SettingsItem,
   PageHeader,
 } from "@takaki/go-design-system";
-import { toast } from "sonner";
+import { toast } from "@takaki/go-design-system";
 
 const DEFAULTS = {
   baseline_repeating: 500,

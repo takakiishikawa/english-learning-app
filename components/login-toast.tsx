@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { toast } from "@takaki/go-design-system";
 
 export function LoginToast() {
   const searchParams = useSearchParams();
