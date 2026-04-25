@@ -99,14 +99,14 @@ function BeforeAfterCard({
       </p>
       <div className="grid grid-cols-[1fr_16px_1fr] items-center gap-1.5">
         <div className="rounded-lg bg-muted/60 px-3 py-2.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/60 mb-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/60 mb-1">
             Before
           </p>
           <p className="text-sm leading-snug text-muted-foreground">{before}</p>
         </div>
         <span className="text-muted-foreground text-center text-sm">→</span>
         <div className="rounded-lg bg-[color:var(--color-grammar)]/10 border border-[color:var(--color-grammar)]/30 px-3 py-2.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-[color:var(--color-grammar)]/70 mb-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-grammar)]/70 mb-1">
             After
           </p>
           <p className="text-sm leading-snug text-foreground">{after}</p>

@@ -19,7 +19,7 @@ function PracticeCard({
       className="group w-full text-left flex flex-col items-center gap-3 rounded-lg border border-[var(--color-border-subtle)] bg-card px-4 py-5 hover:border-[var(--color-border-default)] hover:border border-border transition-all"
     >
       <span className="text-muted-foreground">{icon}</span>
-      <p className="text-[15px] font-medium text-foreground text-center leading-snug">
+      <p className="text-sm font-medium text-foreground text-center leading-snug">
         {title}
       </p>
     </Button>

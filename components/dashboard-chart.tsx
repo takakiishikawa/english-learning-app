@@ -70,7 +70,7 @@ export function DashboardChart({
   return (
     <Card className="border border-border border border-[var(--color-border-default)]">
       <CardHeader className="pb-1 pt-4 px-5">
-        <CardTitle className="text-[13px] font-medium text-muted-foreground uppercase tracking-[0.05em]">
+        <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-[0.05em]">
           {title}
         </CardTitle>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 mt-1.5">
@@ -85,7 +85,7 @@ export function DashboardChart({
             return (
               <span
                 key={key}
-                className="flex items-center gap-1.5 text-[15px] font-medium"
+                className="flex items-center gap-1.5 text-sm font-medium"
                 style={{ color }}
               >
                 <span

@@ -152,7 +152,7 @@ function GrammarModal({
           {/* Detail */}
           {item.detail && (
             <div className="space-y-2">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
                 詳細
               </p>
               <p className="leading-7 whitespace-pre-wrap text-foreground">
@@ -164,7 +164,7 @@ function GrammarModal({
           {/* Examples */}
           {exampleLines.length > 0 && (
             <div className="space-y-2">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
                 例文
               </p>
               <div className="space-y-2">
@@ -180,7 +180,7 @@ function GrammarModal({
                         className={`flex items-start gap-2.5 ${isB ? "pl-6" : ""}`}
                       >
                         <span
-                          className={`shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold ${
+                          className={`shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-xs font-semibold ${
                             isA
                               ? "bg-primary text-primary-foreground"
                               : "bg-muted-foreground/20 text-foreground"
@@ -255,7 +255,7 @@ function PhraseModal({
           {/* Conversation */}
           {convLines.length > 0 && (
             <div className="space-y-2">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
                 会話例
               </p>
               <div className="space-y-2">
@@ -271,7 +271,7 @@ function PhraseModal({
                         className={`flex items-start gap-2.5 ${isB ? "pl-6" : ""}`}
                       >
                         <span
-                          className={`shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold ${
+                          className={`shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-xs font-semibold ${
                             isA
                               ? "bg-primary text-primary-foreground"
                               : "bg-muted-foreground/20 text-foreground"

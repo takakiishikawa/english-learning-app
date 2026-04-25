@@ -33,7 +33,7 @@ function CTACard({
           {icon}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[16px] font-medium text-foreground">{label}</p>
+          <p className="text-base font-medium text-foreground">{label}</p>
           <p className="text-sm text-muted-foreground mt-0.5">{sub}</p>
         </div>
         <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />

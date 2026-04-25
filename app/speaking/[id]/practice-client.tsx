@@ -263,7 +263,7 @@ export function PracticeClient({
       <div className="max-w-lg mx-auto space-y-3">
         {/* Recommended grammar */}
         <div className="rounded-lg bg-muted/40 px-3 py-2.5 space-y-1">
-          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
             推奨文法
           </p>
           <p className="text-sm font-medium text-foreground">{grammarName}</p>
