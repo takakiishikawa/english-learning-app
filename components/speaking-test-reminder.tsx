@@ -1,9 +1,17 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { Banner } from "@takaki/go-design-system";
-import { SpeakingScoreModal } from "@/components/speaking-score-modal";
 import type { SpeakingScore } from "@/lib/types";
+
+const SpeakingScoreModal = dynamic(
+  () =>
+    import("@/components/speaking-score-modal").then((m) => ({
+      default: m.SpeakingScoreModal,
+    })),
+  { ssr: false },
+);
 
 export function SpeakingTestReminder({
   testDay,

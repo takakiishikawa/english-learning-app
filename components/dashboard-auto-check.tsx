@@ -1,7 +1,15 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import { NativeCampModal } from "@/components/native-camp-modal";
+
+const NativeCampModal = dynamic(
+  () =>
+    import("@/components/native-camp-modal").then((m) => ({
+      default: m.NativeCampModal,
+    })),
+  { ssr: false },
+);
 
 export function DashboardAutoCheck({
   hasNativeCampToday,

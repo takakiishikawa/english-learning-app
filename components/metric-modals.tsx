@@ -1,11 +1,25 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { Button } from "@takaki/go-design-system";
-import { NativeCampModal } from "@/components/native-camp-modal";
-import { SpeakingScoreModal } from "@/components/speaking-score-modal";
 import { Pencil } from "lucide-react";
 import type { SpeakingScore } from "@/lib/types";
+
+const NativeCampModal = dynamic(
+  () =>
+    import("@/components/native-camp-modal").then((m) => ({
+      default: m.NativeCampModal,
+    })),
+  { ssr: false },
+);
+const SpeakingScoreModal = dynamic(
+  () =>
+    import("@/components/speaking-score-modal").then((m) => ({
+      default: m.SpeakingScoreModal,
+    })),
+  { ssr: false },
+);
 
 export function MetricModals({
   initialScores,
