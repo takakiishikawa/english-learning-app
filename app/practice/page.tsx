@@ -1,34 +1,30 @@
-"use client";
-
-import { useRouter } from "next/navigation";
-import { PageHeader, Button } from "@takaki/go-design-system";
+import Link from "next/link";
+import { PageHeader } from "@takaki/go-design-system";
 import { BookOpen, MessageSquare, Mic, Play } from "lucide-react";
 
 function PracticeCard({
-  onClick,
+  href,
   icon,
   title,
 }: {
-  onClick: () => void;
+  href: string;
   icon: React.ReactNode;
   title: string;
 }) {
   return (
-    <Button
-      onClick={onClick}
+    <Link
+      href={href}
       className="group w-full text-left flex flex-col items-center gap-3 rounded-lg border border-[var(--color-border-subtle)] bg-card px-4 py-5 hover:border-[var(--color-border-default)] hover:border border-border transition-all"
     >
       <span className="text-muted-foreground">{icon}</span>
       <p className="text-sm font-medium text-foreground text-center leading-snug">
         {title}
       </p>
-    </Button>
+    </Link>
   );
 }
 
 export default function PracticePage() {
-  const router = useRouter();
-
   return (
     <div className="space-y-6 max-w-2xl">
       <PageHeader
@@ -37,22 +33,22 @@ export default function PracticePage() {
       />
       <div className="grid grid-cols-4 gap-3">
         <PracticeCard
-          onClick={() => router.push("/repeating/grammar")}
+          href="/repeating/grammar"
           icon={<BookOpen className="h-5 w-5" />}
           title="文法練習"
         />
         <PracticeCard
-          onClick={() => router.push("/repeating/expression")}
+          href="/repeating/expression"
           icon={<MessageSquare className="h-5 w-5" />}
           title="フレーズ練習"
         />
         <PracticeCard
-          onClick={() => router.push("/speaking")}
+          href="/speaking"
           icon={<Mic className="h-5 w-5" />}
           title="スピーキング"
         />
         <PracticeCard
-          onClick={() => router.push("/shadowing")}
+          href="/shadowing"
           icon={<Play className="h-5 w-5" />}
           title="シャドーイング"
         />

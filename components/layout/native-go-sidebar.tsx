@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -112,7 +112,7 @@ function isActive(href: string, pathname: string) {
 export function NativeGoSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [displayName, setDisplayName] = useState("");
@@ -350,6 +350,7 @@ export function NativeGoSidebar() {
                     src={previewUrl}
                     alt="avatar"
                     className="h-full w-full object-cover"
+                    loading="lazy"
                   />
                 ) : (
                   <span className="text-white text-lg font-medium">
