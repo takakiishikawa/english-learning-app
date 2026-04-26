@@ -1,16 +1,28 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { SectionCards, type KpiCard, Button } from "@takaki/go-design-system";
-import { NativeCampModal } from "@/components/native-camp-modal";
-import { SpeakingScoreModal } from "@/components/speaking-score-modal";
 import { Pencil } from "lucide-react";
 import type { SpeakingScore } from "@/lib/types";
 
+const NativeCampModal = dynamic(
+  () =>
+    import("@/components/native-camp-modal").then((m) => ({
+      default: m.NativeCampModal,
+    })),
+  { ssr: false },
+);
+const SpeakingScoreModal = dynamic(
+  () =>
+    import("@/components/speaking-score-modal").then((m) => ({
+      default: m.SpeakingScoreModal,
+    })),
+  { ssr: false },
+);
+
 type BaseCard = Omit<KpiCard, "actions">;
 
-// KpiCards配列内のインデックス（page.tsxの順番と一致させる）
-// 0:リピーティング 1:スピーキング練習 2:NativeCamp 3:シャドーイング 4:NC AI Speaking Test
 const NC_INDEX = 2;
 const SPEAKING_SCORE_INDEX = 4;
 
