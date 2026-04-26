@@ -1,10 +1,9 @@
 "use client";
 
 import {
-  Bar,
   CartesianGrid,
-  ComposedChart,
   Line,
+  LineChart,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -41,7 +40,7 @@ function RechartsChart({
   return (
     <div className="h-[160px] w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart
+        <LineChart
           data={data}
           margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
         >
@@ -66,15 +65,18 @@ function RechartsChart({
             }}
           />
           {yKeys.map((key) => (
-            <Bar
+            <Line
               key={key}
+              type="monotone"
               dataKey={key}
               name={config[key]?.label as string | undefined}
-              fill={
+              stroke={
                 (config[key]?.color as string | undefined) ??
                 "var(--color-primary)"
               }
-              radius={[2, 2, 0, 0]}
+              strokeWidth={2}
+              dot={{ r: 2.5 }}
+              activeDot={{ r: 4 }}
             />
           ))}
           {lineKeys.map((key) => (
@@ -88,6 +90,7 @@ function RechartsChart({
                 "var(--color-primary)"
               }
               strokeWidth={1.5}
+              strokeDasharray="4 3"
               dot={false}
             />
           ))}
@@ -98,7 +101,7 @@ function RechartsChart({
               strokeDasharray="4 2"
             />
           )}
-        </ComposedChart>
+        </LineChart>
       </ResponsiveContainer>
     </div>
   );
