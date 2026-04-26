@@ -41,7 +41,10 @@ function RechartsChart({
   return (
     <div className="h-[160px] w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+        <ComposedChart
+          data={data}
+          margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
+        >
           <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
           <XAxis
             dataKey={xKey}
@@ -67,7 +70,10 @@ function RechartsChart({
               key={key}
               dataKey={key}
               name={config[key]?.label as string | undefined}
-              fill={(config[key]?.color as string | undefined) ?? "var(--color-primary)"}
+              fill={
+                (config[key]?.color as string | undefined) ??
+                "var(--color-primary)"
+              }
               radius={[2, 2, 0, 0]}
             />
           ))}
@@ -77,13 +83,20 @@ function RechartsChart({
               type="monotone"
               dataKey={key}
               name={config[key]?.label as string | undefined}
-              stroke={(config[key]?.color as string | undefined) ?? "var(--color-primary)"}
+              stroke={
+                (config[key]?.color as string | undefined) ??
+                "var(--color-primary)"
+              }
               strokeWidth={1.5}
               dot={false}
             />
           ))}
           {baseline !== undefined && (
-            <ReferenceLine y={baseline} stroke="var(--color-border)" strokeDasharray="4 2" />
+            <ReferenceLine
+              y={baseline}
+              stroke="var(--color-border)"
+              strokeDasharray="4 2"
+            />
           )}
         </ComposedChart>
       </ResponsiveContainer>
