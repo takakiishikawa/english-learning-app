@@ -17,7 +17,9 @@ const ReportAreaChart = dynamic(
     })),
   {
     ssr: false,
-    loading: () => <div className="h-[286px] rounded-lg border border-[var(--color-border-default)]" />,
+    loading: () => (
+      <div className="h-[286px] rounded-lg border border-[var(--color-border-default)]" />
+    ),
   },
 );
 
