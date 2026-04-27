@@ -127,7 +127,10 @@ Warm, simple illustration style. Clean lines. Not photorealistic.`;
   return buffer;
 }
 
-async function step3_upload(grammarId: string, buffer: Buffer): Promise<string> {
+async function step3_upload(
+  grammarId: string,
+  buffer: Buffer,
+): Promise<string> {
   console.log("[3/4] Supabase Storage に upload");
   // 本番のパス規則 ${user.id}/${grammar.id}.png に合わせる代わりに、
   // テスト時はユーザー無しで grammar.id 直下に置く (force=true 相当)
@@ -146,9 +149,7 @@ async function step3_upload(grammarId: string, buffer: Buffer): Promise<string> 
   }
   console.log(`      → upload OK (${elapsed}s)`);
 
-  const { data } = admin.storage
-    .from("speaking-images")
-    .getPublicUrl(fileName);
+  const { data } = admin.storage.from("speaking-images").getPublicUrl(fileName);
   console.log(`      → public URL: ${data.publicUrl}`);
   return data.publicUrl;
 }

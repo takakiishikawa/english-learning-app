@@ -68,7 +68,11 @@ export async function GET() {
       detail: data,
     });
     if (error || !data)
-      return NextResponse.json({ ok: false, summary: "★ grammar 取得失敗", steps });
+      return NextResponse.json({
+        ok: false,
+        summary: "★ grammar 取得失敗",
+        steps,
+      });
     grammar = data;
   }
 

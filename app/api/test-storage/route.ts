@@ -38,8 +38,8 @@ export async function GET() {
     step: "env",
     ok: Boolean(
       env.NEXT_PUBLIC_SUPABASE_URL &&
-        env.SUPABASE_SERVICE_ROLE_KEY &&
-        env.GOOGLE_IMAGEN_API_KEY,
+      env.SUPABASE_SERVICE_ROLE_KEY &&
+      env.GOOGLE_IMAGEN_API_KEY,
     ),
     ms: 0,
     detail: {
