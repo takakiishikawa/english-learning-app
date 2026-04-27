@@ -17,10 +17,9 @@ export default async function SpeakingPage() {
     supabase
       .from("grammar")
       .select(
-        "id, name, summary, image_url, play_count, lessons!lesson_id(lesson_no)",
+        "id, name, summary, image_url, lessons!lesson_id(lesson_no)",
       )
       .not("image_url", "is", null)
-      .or("play_count.is.null,play_count.lt.10")
       .order("created_at", { ascending: false }),
     supabase
       .from("grammar")

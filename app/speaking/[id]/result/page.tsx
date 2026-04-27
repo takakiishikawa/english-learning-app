@@ -226,16 +226,36 @@ function ResultContent() {
     let next: { id: string } | null = null;
 
     if (curr) {
-      const { data } = await supabase
-        .from("grammar")
-        .select("id")
-        .not("image_url", "is", null)
-        .or("play_count.is.null,play_count.lt.10")
-        .lt("created_at", curr.created_at)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      next = data;
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      const [{ data: candidates }, { data: logs }] = await Promise.all([
+        supabase
+          .from("grammar")
+          .select("id, created_at")
+          .not("image_url", "is", null)
+          .lt("created_at", curr.created_at)
+          .order("created_at", { ascending: false }),
+        user
+          ? supabase
+              .from("speaking_logs")
+              .select("grammar_id")
+              .eq("user_id", user.id)
+          : Promise.resolve({ data: [] as { grammar_id: string }[] }),
+      ]);
+
+      const sessionCounts = new Map<string, number>();
+      for (const log of logs ?? []) {
+        sessionCounts.set(
+          log.grammar_id,
+          (sessionCounts.get(log.grammar_id) ?? 0) + 1,
+        );
+      }
+
+      next =
+        (candidates ?? []).find((c) => (sessionCounts.get(c.id) ?? 0) < 3) ??
+        null;
     }
 
     if (next?.id) {

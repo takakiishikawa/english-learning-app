@@ -209,48 +209,50 @@ export default function ExpressionRepeatingPage() {
     let playCount = 0;
     let startLine = resumeLineRef.current;
 
-    while (
-      localItems.length > 0 &&
-      !cancelRef.current &&
-      playCount < initialCount
-    ) {
-      const item = localItems[localIndex];
-      const lines = item.conversation.split("\n").filter(Boolean);
-      const fromLine = startLine;
-      startLine = 0; // subsequent items always start from line 0
+    try {
+      while (
+        localItems.length > 0 &&
+        !cancelRef.current &&
+        playCount < initialCount
+      ) {
+        const item = localItems[localIndex];
+        const lines = (item.conversation ?? "").split("\n").filter(Boolean);
+        const fromLine = startLine;
+        startLine = 0; // subsequent items always start from line 0
 
-      for (let i = fromLine; i < lines.length; i++) {
-        if (cancelRef.current) break;
-        const ttsText = lines[i].replace(/^[AB]:\s*/i, "");
-        await speakLine(ttsText, i, playRate);
-        if (!cancelRef.current) {
-          await pause(10);
+        for (let i = fromLine; i < lines.length; i++) {
+          if (cancelRef.current) break;
+          const ttsText = lines[i].replace(/^[AB]:\s*/i, "");
+          await speakLine(ttsText, i, playRate);
+          if (i < lines.length - 1 && !cancelRef.current) {
+            await pause(10);
+          }
         }
+
+        if (cancelRef.current) break;
+
+        resumeLineRef.current = 0;
+        setCurrentLine(-1);
+        playCount++;
+        incrementExpressionPlayCount(item.id); // fire and forget for faster transition
+
+        // Update play_count locally for display only — never remove items mid-session
+        localItems = localItems.map((it, idx) =>
+          idx === localIndex ? { ...it, play_count: it.play_count + 1 } : it,
+        );
+        localIndex = (localIndex + 1) % localItems.length;
+
+        setItems([...localItems]);
+        setIndex(localIndex);
+        await pause(50);
       }
-
-      if (cancelRef.current) break;
-
-      resumeLineRef.current = 0;
+    } finally {
+      setPlaying(false);
       setCurrentLine(-1);
-      playCount++;
-      incrementExpressionPlayCount(item.id); // fire and forget for faster transition
-
-      // Update play_count locally for display only — never remove items mid-session
-      localItems = localItems.map((it, idx) =>
-        idx === localIndex ? { ...it, play_count: it.play_count + 1 } : it,
-      );
-      localIndex = (localIndex + 1) % localItems.length;
-
-      setItems([...localItems]);
-      setIndex(localIndex);
-      await pause(50);
-    }
-
-    setPlaying(false);
-    setCurrentLine(-1);
-    if (!userCancelledRef.current) {
-      setShowComplete(true);
-      fetchComment();
+      if (!userCancelledRef.current) {
+        setShowComplete(true);
+        fetchComment();
+      }
     }
   }, [items, index, rate, speakLine, fetchComment]);
 
