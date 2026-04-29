@@ -1,15 +1,7 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import {
-  Card,
-  Badge,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from "@takaki/go-design-system";
+import { Card, Badge } from "@takaki/go-design-system";
+import { SpeakingTabs } from "./speaking-tabs";
 
 const SESSIONS_REQUIRED = 3;
 
@@ -37,7 +29,15 @@ function SessionDots({ count }: { count: number }) {
   );
 }
 
-function GrammarCard({ g, sessions }: { g: GrammarItem; sessions: number }) {
+function GrammarCard({
+  g,
+  sessions,
+  priority = false,
+}: {
+  g: GrammarItem;
+  sessions: number;
+  priority?: boolean;
+}) {
   const lesson = Array.isArray(g.lessons) ? g.lessons[0] : g.lessons;
   return (
     <Link href={`/speaking/${g.id}`}>
@@ -50,7 +50,7 @@ function GrammarCard({ g, sessions }: { g: GrammarItem; sessions: number }) {
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="object-cover group-hover:scale-105 transition-transform duration-300"
-              loading="lazy"
+              {...(priority ? { priority: true } : { loading: "lazy" as const })}
             />
           )}
         </div>
@@ -88,58 +88,47 @@ export function SpeakingGrid({
     (g) => (sessionCounts[g.id] ?? 0) >= SESSIONS_REQUIRED,
   );
 
+  const todoTab =
+    todoItems.length === 0 ? (
+      <div className="text-center py-12 text-muted-foreground text-sm">
+        全部練習しました！
+      </div>
+    ) : (
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        {todoItems.map((g, i) => (
+          <GrammarCard
+            key={g.id}
+            g={g}
+            sessions={sessionCounts[g.id] ?? 0}
+            priority={i === 0}
+          />
+        ))}
+      </div>
+    );
+
+  const practicedTab =
+    practicedItems.length === 0 ? (
+      <div className="text-center py-12 text-muted-foreground text-sm">
+        まだ3回完了した文法がありません
+      </div>
+    ) : (
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        {practicedItems.map((g) => (
+          <GrammarCard
+            key={g.id}
+            g={g}
+            sessions={sessionCounts[g.id] ?? 0}
+          />
+        ))}
+      </div>
+    );
+
   return (
-    <Tabs defaultValue="todo">
-      <TabsList>
-        <TabsTrigger value="todo">
-          これから
-          <Badge variant="secondary" className="ml-2 rounded-full">
-            {todoItems.length}
-          </Badge>
-        </TabsTrigger>
-        <TabsTrigger value="practiced">
-          練習した
-          <Badge variant="secondary" className="ml-2 rounded-full">
-            {practicedItems.length}
-          </Badge>
-        </TabsTrigger>
-      </TabsList>
-
-      <TabsContent value="todo" className="mt-4">
-        {todoItems.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground text-sm">
-            全部練習しました！
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {todoItems.map((g) => (
-              <GrammarCard
-                key={g.id}
-                g={g}
-                sessions={sessionCounts[g.id] ?? 0}
-              />
-            ))}
-          </div>
-        )}
-      </TabsContent>
-
-      <TabsContent value="practiced" className="mt-4">
-        {practicedItems.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground text-sm">
-            まだ3回完了した文法がありません
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {practicedItems.map((g) => (
-              <GrammarCard
-                key={g.id}
-                g={g}
-                sessions={sessionCounts[g.id] ?? 0}
-              />
-            ))}
-          </div>
-        )}
-      </TabsContent>
-    </Tabs>
+    <SpeakingTabs
+      todoTab={todoTab}
+      practicedTab={practicedTab}
+      todoCount={todoItems.length}
+      practicedCount={practicedItems.length}
+    />
   );
 }
