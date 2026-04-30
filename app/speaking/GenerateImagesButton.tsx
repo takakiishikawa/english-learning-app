@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@takaki/go-design-system";
 import { Loader2, ImageIcon, X } from "lucide-react";
 import { toast } from "@takaki/go-design-system";
@@ -29,6 +30,7 @@ export function GenerateImagesButton({
     | "ghost"
     | "link";
 }) {
+  const router = useRouter();
   const [phase, setPhase] = useState<Phase>("idle");
   const [batchNum, setBatchNum] = useState(0);
   const [countdown, setCountdown] = useState(0);
@@ -37,6 +39,7 @@ export function GenerateImagesButton({
 
   const totalBatches = Math.ceil(items.length / BATCH_SIZE);
   const estimatedMins = Math.ceil((totalBatches * BATCH_WAIT_SECS) / 60);
+  const nextBatchSize = Math.min(BATCH_SIZE, items.length);
 
   function waitWithCountdown(secs: number): Promise<void> {
     return new Promise((resolve) => {
@@ -145,47 +148,57 @@ export function GenerateImagesButton({
   }
 
   async function handleSimpleGenerate() {
+    const batch = items.slice(0, BATCH_SIZE);
+    if (batch.length === 0) return;
+
     setPhase("generating");
     let totalFailed = 0;
     let firstError: string | undefined;
 
     try {
-      for (let i = 0; i < items.length; i += BATCH_SIZE) {
-        const batch = items.slice(i, i + BATCH_SIZE);
+      try {
+        const res = await fetch("/api/generate-images", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items: batch, force }),
+        });
+        const text = await res.text();
+        let data: {
+          error?: string;
+          results?: { status: string; reason?: string }[];
+        } = {};
         try {
-          const res = await fetch("/api/generate-images", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ items: batch, force }),
-          });
-          const text = await res.text();
-          let data: {
-            error?: string;
-            results?: { status: string; reason?: string }[];
-          } = {};
-          try {
-            data = JSON.parse(text);
-          } catch {
-            throw new Error(`サーバーエラー (HTTP ${res.status})`);
-          }
-          if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
-          const failed = (data.results ?? []).filter(
-            (r) => r.status === "error",
-          );
-          totalFailed += failed.length;
-          if (failed.length > 0 && !firstError)
-            firstError = failed[0]?.reason ?? "APIエラー";
-        } catch (e) {
-          totalFailed += batch.length;
-          if (!firstError)
-            firstError = e instanceof Error ? e.message : "APIエラー";
+          data = JSON.parse(text);
+        } catch {
+          throw new Error(`サーバーエラー (HTTP ${res.status})`);
         }
+        if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
+        const failed = (data.results ?? []).filter(
+          (r) => r.status === "error",
+        );
+        totalFailed += failed.length;
+        if (failed.length > 0 && !firstError)
+          firstError = failed[0]?.reason ?? "APIエラー";
+      } catch (e) {
+        totalFailed += batch.length;
+        if (!firstError)
+          firstError = e instanceof Error ? e.message : "APIエラー";
       }
+
+      const success = batch.length - totalFailed;
       if (totalFailed > 0) {
-        toast.error(`${totalFailed}件の生成に失敗: ${firstError}`);
+        toast.error(
+          `${success}件成功・${totalFailed}件失敗: ${firstError ?? ""}`,
+        );
       } else {
-        toast.success("画像生成完了！ページを更新してください");
+        const remaining = items.length - batch.length;
+        toast.success(
+          remaining > 0
+            ? `${success}件生成完了（残り${remaining}件）`
+            : `${success}件すべて生成完了！`,
+        );
       }
+      router.refresh();
     } finally {
       setPhase("idle");
     }
@@ -200,11 +213,17 @@ export function GenerateImagesButton({
   const startItem = (batchNum - 1) * BATCH_SIZE + 1;
   const endItem = Math.min(batchNum * BATCH_SIZE, items.length);
 
+  const simpleIdleLabel =
+    items.length > BATCH_SIZE
+      ? `次の${nextBatchSize}件を生成 (残${items.length}件)`
+      : `画像を生成 (${items.length}件)`;
   const buttonLabel = !isRunning
-    ? (customLabel ?? `画像を生成 (${items.length}件)`)
+    ? (customLabel ?? (force ? `画像を生成 (${items.length}件)` : simpleIdleLabel))
     : phase === "waiting"
       ? `次のバッチまで ${countdown}秒...`
-      : `バッチ ${batchNum}/${totalBatches} 実行中... (${startItem}-${endItem}枚目)`;
+      : force
+        ? `バッチ ${batchNum}/${totalBatches} 実行中... (${startItem}-${endItem}枚目)`
+        : `${nextBatchSize}件 生成中...`;
 
   return (
     <div className="flex items-center gap-2">
