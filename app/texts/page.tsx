@@ -532,9 +532,19 @@ const lessonColumns: ColumnDef<LessonRow>[] = [
   {
     accessorKey: "status",
     header: "ステータス",
-    cell: ({ row }) => <StatusTag status={row.original.status} />,
+    cell: ({ row }) => (
+      <StatusTag status={deriveLessonStatus(row.original)} />
+    ),
   },
 ];
+
+function deriveLessonStatus(row: LessonRow): Lesson["status"] {
+  if (row.status === "未登録") return "未登録";
+  const { grammarStats: g, expressionStats: e } = row;
+  if (g.total + e.total === 0) return row.status;
+  const allDone = g.done >= g.total && e.done >= e.total;
+  return allDone ? "習得済み" : "練習中";
+}
 
 function LessonList({
   lessons,

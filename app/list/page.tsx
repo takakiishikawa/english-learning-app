@@ -6,10 +6,6 @@ import {
   DataTable,
   PageHeader,
   Badge,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
   Tabs,
   TabsContent,
   TabsList,
@@ -53,123 +49,18 @@ function sortByLessonNo<T extends { lessons: { lesson_no: string } | null }>(
   });
 }
 
-function PlayProgress({ count, max = 10 }: { count: number; max?: number }) {
-  const pct = Math.min((count / max) * 100, 100);
+function PlayCount({ count, max = 10 }: { count: number; max?: number }) {
+  if (count >= max) {
+    return (
+      <Badge className="border-transparent bg-[color:var(--color-success-subtle)] text-[color:var(--color-success)]">
+        完了
+      </Badge>
+    );
+  }
   return (
-    <div className="flex items-center gap-2 min-w-[80px]">
-      <div className="h-1 w-12 bg-muted rounded-full overflow-hidden">
-        <div
-          className="h-full bg-primary rounded-full"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      <span className="text-xs text-foreground tabular-nums">
-        {count}/{max}
-      </span>
-    </div>
-  );
-}
-
-// ── Grammar Modal ─────────────────────────────────────────────────────────────
-
-function GrammarModal({
-  item,
-  onClose,
-}: {
-  item: GrammarWithLesson;
-  onClose: () => void;
-}) {
-  const exampleLines = item.examples?.split("\n").filter(Boolean) ?? [];
-
-  return (
-    <Dialog
-      open
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
-    >
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{item.name}</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-5 text-sm">
-          {/* Summary */}
-          <div className="rounded-lg bg-muted/60 px-4 py-3 leading-relaxed whitespace-pre-line text-foreground">
-            {item.summary?.replace(/\\n/g, "\n")}
-          </div>
-
-          {/* Detail */}
-          {item.detail && (
-            <div className="space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
-                詳細
-              </p>
-              <p className="leading-7 whitespace-pre-wrap text-foreground">
-                {item.detail}
-              </p>
-            </div>
-          )}
-
-          {/* Examples */}
-          {exampleLines.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
-                例文
-              </p>
-              <div className="space-y-2">
-                {exampleLines.map((line, i) => {
-                  const isA = line.startsWith("A:");
-                  const isB = line.startsWith("B:");
-                  if (isA || isB) {
-                    const speaker = isA ? "A" : "B";
-                    const text = line.slice(2).trim();
-                    return (
-                      <div
-                        key={i}
-                        className={`flex items-start gap-2.5 ${isB ? "pl-6" : ""}`}
-                      >
-                        <span
-                          className={`shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-xs font-semibold ${
-                            isA
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted-foreground/20 text-foreground"
-                          }`}
-                        >
-                          {speaker}
-                        </span>
-                        <div
-                          className={`rounded-lg px-3 py-2 leading-relaxed ${
-                            isA
-                              ? "bg-primary/10 text-foreground"
-                              : "bg-muted text-foreground"
-                          }`}
-                        >
-                          {text}
-                        </div>
-                      </div>
-                    );
-                  }
-                  return (
-                    <p key={i} className="text-foreground pl-1">
-                      {line}
-                    </p>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Footer */}
-          <div className="flex items-center gap-4 pt-3 border-t text-xs text-muted-foreground">
-            <StarRating value={item.frequency} />
-            <span>練習 {item.play_count} / 10回</span>
-            {item.lessons?.lesson_no && (
-              <span>テキスト {item.lessons.lesson_no}</span>
-            )}
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <span className="text-xs text-foreground tabular-nums">
+      {count}/{max}
+    </span>
   );
 }
 
@@ -183,7 +74,6 @@ function GrammarTab({
   const supabase = createClient();
   const [items, setItems] = useState<GrammarWithLesson[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState<GrammarWithLesson | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -235,7 +125,7 @@ function GrammarTab({
       {
         accessorKey: "play_count",
         header: "練習",
-        cell: ({ row }) => <PlayProgress count={row.original.play_count} />,
+        cell: ({ row }) => <PlayCount count={row.original.play_count} />,
       },
     ],
     [],
@@ -256,11 +146,7 @@ function GrammarTab({
         data={items}
         pageSize={20}
         emptyMessage="文法が登録されていません"
-        onRowClick={setSelected}
       />
-      {selected && (
-        <GrammarModal item={selected} onClose={() => setSelected(null)} />
-      )}
     </div>
   );
 }
@@ -331,7 +217,7 @@ function PhraseTab({ onCountChange }: { onCountChange?: (n: number) => void }) {
       {
         accessorKey: "play_count",
         header: "練習",
-        cell: ({ row }) => <PlayProgress count={row.original.play_count} />,
+        cell: ({ row }) => <PlayCount count={row.original.play_count} />,
       },
     ],
     [],

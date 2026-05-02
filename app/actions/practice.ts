@@ -8,7 +8,7 @@ export async function incrementGrammarPlayCount(id: string) {
 
   const { data: grammar } = await supabase
     .from("grammar")
-    .select("play_count")
+    .select("play_count, lesson_id")
     .eq("id", id)
     .single();
 
@@ -23,7 +23,10 @@ export async function incrementGrammarPlayCount(id: string) {
     .eq("id", id);
 
   await upsertGrammarPracticeLog();
+  await syncLessonStatus(grammar.lesson_id);
   revalidatePath("/");
+  revalidatePath("/texts");
+  revalidatePath("/lessons");
 }
 
 export async function incrementExpressionPlayCount(id: string) {
@@ -31,7 +34,7 @@ export async function incrementExpressionPlayCount(id: string) {
 
   const { data: expression } = await supabase
     .from("expressions")
-    .select("play_count")
+    .select("play_count, lesson_id")
     .eq("id", id)
     .single();
 
@@ -46,7 +49,32 @@ export async function incrementExpressionPlayCount(id: string) {
     .eq("id", id);
 
   await upsertExpressionPracticeLog();
+  await syncLessonStatus(expression.lesson_id);
   revalidatePath("/");
+  revalidatePath("/texts");
+  revalidatePath("/lessons");
+}
+
+async function syncLessonStatus(lessonId: string | null) {
+  if (!lessonId) return;
+  const supabase = await createClient();
+
+  const [{ data: grammars }, { data: expressions }] = await Promise.all([
+    supabase.from("grammar").select("play_count").eq("lesson_id", lessonId),
+    supabase.from("expressions").select("play_count").eq("lesson_id", lessonId),
+  ]);
+
+  const total = (grammars?.length ?? 0) + (expressions?.length ?? 0);
+  if (total === 0) return;
+
+  const allDone =
+    (grammars ?? []).every((g) => g.play_count >= 10) &&
+    (expressions ?? []).every((e) => e.play_count >= 10);
+
+  await supabase
+    .from("lessons")
+    .update({ status: allDone ? "習得済み" : "練習中" })
+    .eq("id", lessonId);
 }
 
 async function upsertGrammarPracticeLog() {

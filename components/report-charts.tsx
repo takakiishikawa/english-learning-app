@@ -223,19 +223,19 @@ export function ReportCharts({
           unit="回"
         />
         <ReportAreaChart
-          data={data.nativeCamp as Record<string, unknown>[]}
-          config={ncConfig}
-          xKey="label"
-          yKeys={["minutes"]}
-          title="Native Camp"
-          unit="分"
-        />
-        <ReportAreaChart
           data={shadowingData as Record<string, unknown>[]}
           config={shadowingConfig}
           xKey="label"
           yKeys={["minutes"]}
           title="シャドーイング"
+          unit="分"
+        />
+        <ReportAreaChart
+          data={data.nativeCamp as Record<string, unknown>[]}
+          config={ncConfig}
+          xKey="label"
+          yKeys={["minutes"]}
+          title="Native Camp"
           unit="分"
         />
       </TabsContent>
