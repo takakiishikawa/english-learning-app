@@ -367,7 +367,7 @@ export default async function HomePage() {
             href="/speaking"
             icon={<Mic className="h-4 w-4" />}
             label="スピーキング"
-            sub="4コマ物語を話す"
+            sub="4コマを話す"
           />
           <CTACard
             href="/shadowing"
