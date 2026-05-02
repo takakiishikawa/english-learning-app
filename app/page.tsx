@@ -286,6 +286,13 @@ export default async function HomePage() {
       diffUnit: "回",
     },
     {
+      title: "シャドーイング",
+      value: `${weeklyShadowing}分`,
+      ratio: ratioOf(weeklyShadowing, settings?.baseline_shadowing),
+      weekDiff: shadowingDiff,
+      diffUnit: "分",
+    },
+    {
       title: "Native Camp",
       value: `${weeklyNativeCampCount * 25}分`,
       ratio: ratioOf(
@@ -293,13 +300,6 @@ export default async function HomePage() {
         settings?.baseline_nativecamp,
       ),
       weekDiff: ncCountDiff !== null ? ncCountDiff * 25 : null,
-      diffUnit: "分",
-    },
-    {
-      title: "シャドーイング",
-      value: `${weeklyShadowing}分`,
-      ratio: ratioOf(weeklyShadowing, settings?.baseline_shadowing),
-      weekDiff: shadowingDiff,
       diffUnit: "分",
     },
   ];
@@ -355,25 +355,25 @@ export default async function HomePage() {
             href="/repeating/grammar"
             icon={<BookOpen className="h-4 w-4" />}
             label="文法リピーティング"
-            sub="文法を声に出して定着させる"
+            sub="音読して覚える"
           />
           <CTACard
             href="/repeating/expression"
             icon={<MessageSquare className="h-4 w-4" />}
             label="フレーズリピーティング"
-            sub="使えるフレーズを反復で覚える"
+            sub="音読して覚える"
           />
           <CTACard
             href="/speaking"
             icon={<Mic className="h-4 w-4" />}
             label="スピーキング"
-            sub="画像をヒントに英語で説明する"
+            sub="画像を見て話す"
           />
           <CTACard
             href="/shadowing"
             icon={<Play className="h-4 w-4" />}
             label="シャドーイング"
-            sub="YouTubeに合わせて発音をなぞる"
+            sub="動画を真似る"
           />
         </div>
       </div>
@@ -407,6 +407,17 @@ export default async function HomePage() {
             }
           />
           <DashboardChart
+            title="シャドーイング（7日間）"
+            data={shadowingChartData}
+            config={shadowingConfig}
+            xKey="label"
+            yKeys={["minutes"]}
+            unit="分"
+            baseline={
+              settings ? Math.round(settings.baseline_shadowing / 7) : undefined
+            }
+          />
+          <DashboardChart
             title="Native Camp（7日間）"
             data={ncChartData}
             config={ncConfig}
@@ -417,17 +428,6 @@ export default async function HomePage() {
               settings
                 ? Math.round(settings.baseline_nativecamp / 7)
                 : undefined
-            }
-          />
-          <DashboardChart
-            title="シャドーイング（7日間）"
-            data={shadowingChartData}
-            config={shadowingConfig}
-            xKey="label"
-            yKeys={["minutes"]}
-            unit="分"
-            baseline={
-              settings ? Math.round(settings.baseline_shadowing / 7) : undefined
             }
           />
           <DashboardChart

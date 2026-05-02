@@ -40,7 +40,7 @@ export type DashboardKpi = {
   diffUnit?: string;
 };
 
-const NC_INDEX = 2;
+const NC_INDEX = 3;
 const SPEAKING_SCORE_INDEX = 4;
 
 function EditIconButton({ onClick }: { onClick: () => void }) {
