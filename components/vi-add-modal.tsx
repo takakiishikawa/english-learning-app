@@ -160,7 +160,7 @@ export function ViAddModal({
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle>文法・フレーズを追加</DialogTitle>
           <DialogDescription>
-            学びたい文法・フレーズを箇条書きで貼り付けると、AIが仕分けして単語解説とニュアンスを付けます。確認画面で不要な行を削除してから追加してください。
+            箇条書きで投げてください。仕分け後の確認画面で不要な行を削除できます。
           </DialogDescription>
         </DialogHeader>
 
@@ -419,7 +419,7 @@ export function ViAddModal({
                   キャンセル
                 </Button>
                 <Button onClick={handleExtract} disabled={!hasInput}>
-                  AIで仕分けする
+                  仕分けする
                 </Button>
               </>
             )}
