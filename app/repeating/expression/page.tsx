@@ -26,6 +26,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { ConversationLines } from "@/components/conversation-lines";
+import { WordNotesPanel } from "@/components/word-notes";
 
 function StarRating({ value }: { value: number }) {
   return (
@@ -303,14 +304,27 @@ export default function ExpressionRepeatingPage() {
               {current?.meaning?.replace(/\\n/g, "\n")}
             </p>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm font-medium text-muted-foreground mb-3">
-              会話
-            </p>
-            <ConversationLines lines={lines} currentLine={currentLine} />
-            <p className="text-base text-muted-foreground mt-4">
-              場面: {current?.usage_scene}
-            </p>
+          <CardContent className="space-y-5">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground mb-3">
+                会話
+              </p>
+              <ConversationLines lines={lines} currentLine={currentLine} />
+              <p className="text-base text-muted-foreground mt-4">
+                場面: {current?.usage_scene}
+              </p>
+            </div>
+            {language === "vi" && current?.nuance && (
+              <div className="rounded-md border border-border/60 bg-muted/30 px-4 py-3">
+                <p className="text-xs font-medium text-muted-foreground mb-1">
+                  ニュアンス
+                </p>
+                <p className="text-sm leading-relaxed">{current.nuance}</p>
+              </div>
+            )}
+            {language === "vi" && current?.word_notes && (
+              <WordNotesPanel notes={current.word_notes} />
+            )}
           </CardContent>
         </Card>
 

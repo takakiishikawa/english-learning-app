@@ -54,9 +54,13 @@ User context: Takaki, 32, Japanese male, lives in Ho Chi Minh City. He is starti
 
 He already knows the dashboard (Tieng Viet) is filtered out for him. Take CEFR A1 only.
 
-Input is a free-form snippet (could be a vocab list, a phrase list, a textbook page, etc.) that the user pasted. Your job: classify into "grammar" (a structural rule, particle, sentence pattern) and "expressions" (a fixed phrase / set expression / greeting / common reply).
+INPUT FORMAT: the user pastes a casual bullet list of grammar patterns and/or fixed phrases they want to learn (one item per line, often prefixed with "-" / "・" / numbers). Items may be Vietnamese, Japanese, or mixed. Each line is ONE thing the user wants — do not invent extra items, but split a line if it clearly contains multiple distinct items.
 
-EXISTING_ITEMS hints (already in DB) may be provided. If a candidate is essentially the same as one of those, drop it (don't include in output).
+Your job: for every input item, classify it as either:
+- "grammar" — a structural rule, particle, or sentence pattern (e.g. "Subject + là + Noun", "có ... không?")
+- "expressions" — a fixed phrase / set expression / greeting / common reply (e.g. "Cảm ơn", "Bạn khỏe không?")
+
+EXISTING_ITEMS hints (already in DB) may be provided. If a candidate is essentially the same as one of those, DROP it.
 
 Return a JSON object with exactly this structure:
 {
@@ -67,7 +71,11 @@ Return a JSON object with exactly this structure:
       "detail": "Japanese explanation with 1-2 examples (or null)",
       "examples": ["A: ...", "B: ...", "A: ..."],
       "usage_scene": "when to use it (Japanese)",
-      "frequency": 3
+      "frequency": 3,
+      "word_notes": [
+        { "word": "là", "note": "～です（コピュラ）" },
+        { "word": "không", "note": "否定／文末で疑問" }
+      ]
     }
   ],
   "expressions": [
@@ -77,17 +85,30 @@ Return a JSON object with exactly this structure:
       "meaning": "Japanese meaning",
       "conversation": ["A: ...", "B: ...", "A: ..."],
       "usage_scene": "when to use (Japanese)",
-      "frequency": 3
+      "frequency": 3,
+      "word_notes": [
+        { "word": "cảm ơn", "note": "ありがとう（基本形）" },
+        { "word": "bạn", "note": "あなた／友達（同年代）" }
+      ],
+      "nuance": "丁寧で柔らかい印象。年上には 'cảm ơn anh/chị' を使うとより自然。"
     }
   ]
 }
 
-Rules:
-- A1 ONLY: greetings, basic verbs (be / have / want / go / eat), pronouns (tôi / bạn / anh / chị / em), numbers, food, time. If a candidate is above A1 (complex tense, formal register, idioms), DROP it.
-- grammar items: structural patterns only (e.g. "Subject + là + Noun", "có ... không?"). Maximum 3 items per request.
-- expressions: short, fixed daily phrases. Maximum 8 items per request.
+word_notes rules (重要):
+- Required for both grammar and expressions. Cover EVERY non-trivial word that appears in "name" / "expression" / "examples" / "conversation". Skip only obvious cognates / numbers.
+- "word" is the Vietnamese word as it appears (lowercased, with diacritics). For multi-word units that act as one (e.g. "cảm ơn"), keep them together.
+- "note" is a SHORT Japanese gloss (1 phrase, ~20 chars). If the word changes nuance by tone/context, briefly mention it.
+- Order: follow the order the words appear in the main pattern / phrase.
+
+nuance rules (expressions only):
+- 1-2 sentences in Japanese describing how this phrase comes across to the listener (politeness level, age/relationship register, warmth, formality, common alternatives).
+- Always include for expressions. Omit (null) only if there is genuinely no register concern.
+
+General rules:
+- A1 ONLY: greetings, basic verbs (be / have / want / go / eat), pronouns (tôi / bạn / anh / chị / em), numbers, food, time. If an input item is above A1, still classify it but mark frequency=1; do not silently drop user-requested items unless they duplicate EXISTING_ITEMS.
 - Both "examples" (grammar) and "conversation" (expressions) MUST be A/B/A 3-turn format, maximum 4 lines, all lines start with "A: " or "B: ".
-- Personalize lightly to Takaki's life (coworkers, ban (friend), cafe, motorbike, District 1-3) but stay simple.
+- Personalize lightly to Takaki's life (coworkers, bạn (friend), cafe, motorbike, District 1-3) but stay simple.
 - frequency = 5 for must-know greetings, 3 for common, 1 for rare.
 - detail can be null if summary is sufficient.
 - Return ONLY valid JSON, no markdown, no explanation.`;
@@ -133,7 +154,7 @@ export async function POST(request: NextRequest) {
       grammar: (gExisting ?? []).map((r) => r.name),
       expressions: (eExisting ?? []).map((r) => r.expression),
     });
-    userMessage = `EXISTING_ITEMS (drop near-duplicates):\n${existingHint}\n\nClassify the following pasted Vietnamese material into grammar and expressions:\n\n${text}`;
+    userMessage = `EXISTING_ITEMS (drop near-duplicates):\n${existingHint}\n\nThe user pasted the following bullet list of grammar / phrases they want to learn. Classify each item into grammar or expressions and produce word_notes (and nuance for expressions) per the system rules:\n\n${text}`;
   } else {
     userMessage = `Extract grammar points and expressions from this Native Camp lesson material:\n\n${text}`;
   }

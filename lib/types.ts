@@ -7,6 +7,11 @@ export const LANGUAGE_LABELS: Record<Language, string> = {
   vi: "ベトナム語",
 };
 
+export interface WordNote {
+  word: string;
+  note: string;
+}
+
 export interface Grammar {
   id: string;
   name: string;
@@ -21,6 +26,7 @@ export interface Grammar {
   lesson_id: string | null;
   image_url: string | null;
   language: Language;
+  word_notes: WordNote[] | null;
 }
 
 export interface SpeakingLog {
@@ -47,6 +53,8 @@ export interface Expression {
   created_at: string;
   lesson_id: string | null;
   language: Language;
+  word_notes: WordNote[] | null;
+  nuance: string | null;
 }
 
 export interface Lesson {
@@ -132,6 +140,7 @@ export interface ExtractedGrammar {
   examples: string[];
   usage_scene: string;
   frequency: number;
+  word_notes?: WordNote[];
 }
 
 export interface ExtractedExpression {
@@ -141,6 +150,8 @@ export interface ExtractedExpression {
   conversation: string[];
   usage_scene: string;
   frequency: number;
+  word_notes?: WordNote[];
+  nuance?: string;
 }
 
 export interface ExtractResult {

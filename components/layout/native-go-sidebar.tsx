@@ -26,6 +26,7 @@ import {
   Mic,
   Volume2,
   FileText,
+  BookOpen,
   BarChart3,
   Settings,
   Lightbulb,
@@ -54,7 +55,13 @@ const navItems: NavItem[] = [
   { href: "/repeating/grammar", label: "リピーティング", icon: Repeat2 },
   { href: "/speaking", label: "スピーキング", icon: Mic, languages: ["en"] },
   { href: "/shadowing", label: "シャドーイング", icon: Volume2 },
-  { href: "/texts", label: "テキスト", icon: FileText },
+  { href: "/texts", label: "テキスト", icon: FileText, languages: ["en"] },
+  {
+    href: "/list",
+    label: "文法・フレーズ",
+    icon: BookOpen,
+    languages: ["vi"],
+  },
   { href: "/report", label: "レポート", icon: BarChart3 },
 ];
 
@@ -68,6 +75,12 @@ function isActive(href: string, pathname: string) {
       pathname === "/texts" ||
       pathname === "/lessons" ||
       pathname === "/add" ||
+      pathname === "/list" ||
+      pathname === "/grammar" ||
+      pathname === "/expressions"
+    );
+  if (href === "/list")
+    return (
       pathname === "/list" ||
       pathname === "/grammar" ||
       pathname === "/expressions"

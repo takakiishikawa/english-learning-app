@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
   Button,
@@ -656,7 +657,14 @@ function FlatTextList({
 export default function TextsPage() {
   const supabase = createClient();
   const language = useCurrentLanguage();
+  const router = useRouter();
   const isEn = language === "en";
+
+  useEffect(() => {
+    if (language === "vi") {
+      router.replace("/list");
+    }
+  }, [language, router]);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [grammars, setGrammars] = useState<
     { id: string; name: string; play_count: number }[]

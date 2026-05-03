@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentLanguage } from "@/lib/language";
-import type { Language } from "@/lib/types";
+import type { Language, WordNote } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 
 export async function incrementGrammarPlayCount(id: string) {
@@ -118,6 +118,7 @@ export async function saveGrammar(
     examples: string[];
     usage_scene: string;
     frequency: number;
+    word_notes?: WordNote[] | null;
   }[],
   lessonId?: string,
 ): Promise<{ id: string; name: string }[]> {
@@ -134,6 +135,7 @@ export async function saveGrammar(
     play_count: 0,
     lesson_id: lessonId ?? null,
     language,
+    word_notes: g.word_notes ?? null,
   }));
 
   const { data, error } = await supabase
@@ -155,6 +157,8 @@ export async function saveExpressions(
     conversation: string[];
     usage_scene: string;
     frequency: number;
+    word_notes?: WordNote[] | null;
+    nuance?: string | null;
   }[],
   lessonId?: string,
 ) {
@@ -171,6 +175,8 @@ export async function saveExpressions(
     play_count: 0,
     lesson_id: lessonId ?? null,
     language,
+    word_notes: e.word_notes ?? null,
+    nuance: e.nuance ?? null,
   }));
 
   const { error } = await supabase.from("expressions").insert(rows);

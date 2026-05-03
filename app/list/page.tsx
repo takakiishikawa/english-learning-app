@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
+  Button,
   DataTable,
   PageHeader,
   Badge,
@@ -14,7 +15,9 @@ import {
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Grammar, Expression } from "@/lib/types";
 import { useCurrentLanguage } from "@/lib/language-context";
-import { Star } from "lucide-react";
+import { Plus, Star } from "lucide-react";
+import { ViAddModal } from "@/components/vi-add-modal";
+import { WordNotesInline } from "@/components/word-notes";
 
 type GrammarWithLesson = Grammar & { lessons: { lesson_no: string } | null };
 type ExpressionWithLesson = Expression & {
@@ -68,12 +71,15 @@ function PlayCount({ count, max = 10 }: { count: number; max?: number }) {
 // ── GrammarTab ────────────────────────────────────────────────────────────────
 
 function GrammarTab({
+  reloadKey,
   onCountChange,
 }: {
+  reloadKey: number;
   onCountChange?: (n: number) => void;
 }) {
   const supabase = createClient();
   const language = useCurrentLanguage();
+  const isVi = language === "vi";
   const [items, setItems] = useState<GrammarWithLesson[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -89,49 +95,68 @@ function GrammarTab({
       setLoading(false);
     }
     load();
-  }, [language]);
+  }, [language, reloadKey]);
 
   const columns = useMemo(
-    (): ColumnDef<GrammarWithLesson>[] => [
-      {
-        id: "lesson_no",
-        header: "テキスト",
-        cell: ({ row }) => (
-          <span className="font-mono text-xs text-foreground">
-            {row.original.lessons?.lesson_no ?? "—"}
-          </span>
-        ),
-      },
-      {
-        accessorKey: "name",
-        header: "文法名",
-        cell: ({ row }) => (
-          <span className="font-medium text-foreground">
-            {row.original.name}
-          </span>
-        ),
-      },
-      {
-        accessorKey: "summary",
-        header: "概要",
-        cell: ({ row }) => (
-          <span className="text-sm text-foreground line-clamp-1 max-w-xs block">
-            {row.original.summary?.replace(/\\n/g, " ").split("\n")[0]}
-          </span>
-        ),
-      },
-      {
-        accessorKey: "frequency",
-        header: "頻度",
-        cell: ({ row }) => <StarRating value={row.original.frequency} />,
-      },
-      {
-        accessorKey: "play_count",
-        header: "練習",
-        cell: ({ row }) => <PlayCount count={row.original.play_count} />,
-      },
-    ],
-    [],
+    (): ColumnDef<GrammarWithLesson>[] => {
+      const cols: ColumnDef<GrammarWithLesson>[] = [];
+      if (!isVi) {
+        cols.push({
+          id: "lesson_no",
+          header: "テキスト",
+          cell: ({ row }) => (
+            <span className="font-mono text-xs text-foreground">
+              {row.original.lessons?.lesson_no ?? "—"}
+            </span>
+          ),
+        });
+      }
+      cols.push(
+        {
+          accessorKey: "name",
+          header: "文法名",
+          cell: ({ row }) => (
+            <span className="font-medium text-foreground">
+              {row.original.name}
+            </span>
+          ),
+        },
+        {
+          accessorKey: "summary",
+          header: "概要",
+          cell: ({ row }) => (
+            <span className="text-sm text-foreground line-clamp-1 max-w-xs block">
+              {row.original.summary?.replace(/\\n/g, " ").split("\n")[0]}
+            </span>
+          ),
+        },
+      );
+      if (isVi) {
+        cols.push({
+          id: "word_notes",
+          header: "単語解説",
+          cell: ({ row }) => (
+            <div className="max-w-md">
+              <WordNotesInline notes={row.original.word_notes} />
+            </div>
+          ),
+        });
+      }
+      cols.push(
+        {
+          accessorKey: "frequency",
+          header: "頻度",
+          cell: ({ row }) => <StarRating value={row.original.frequency} />,
+        },
+        {
+          accessorKey: "play_count",
+          header: "練習",
+          cell: ({ row }) => <PlayCount count={row.original.play_count} />,
+        },
+      );
+      return cols;
+    },
+    [isVi],
   );
 
   if (loading) {
@@ -156,9 +181,16 @@ function GrammarTab({
 
 // ── PhraseTab ─────────────────────────────────────────────────────────────────
 
-function PhraseTab({ onCountChange }: { onCountChange?: (n: number) => void }) {
+function PhraseTab({
+  reloadKey,
+  onCountChange,
+}: {
+  reloadKey: number;
+  onCountChange?: (n: number) => void;
+}) {
   const supabase = createClient();
   const language = useCurrentLanguage();
+  const isVi = language === "vi";
   const [items, setItems] = useState<ExpressionWithLesson[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -174,58 +206,88 @@ function PhraseTab({ onCountChange }: { onCountChange?: (n: number) => void }) {
       setLoading(false);
     }
     load();
-  }, [language]);
+  }, [language, reloadKey]);
 
   const columns = useMemo(
-    (): ColumnDef<ExpressionWithLesson>[] => [
-      {
-        id: "lesson_no",
-        header: "テキスト",
-        cell: ({ row }) => (
-          <span className="font-mono text-xs text-foreground">
-            {row.original.lessons?.lesson_no ?? "—"}
-          </span>
-        ),
-      },
-      {
-        accessorKey: "category",
-        header: "種別",
-        cell: ({ row }) => (
-          <span className="text-xs text-foreground">
-            {row.original.category}
-          </span>
-        ),
-      },
-      {
-        accessorKey: "expression",
-        header: "フレーズ",
-        cell: ({ row }) => (
-          <span className="font-medium text-foreground">
-            {row.original.expression}
-          </span>
-        ),
-      },
-      {
-        accessorKey: "meaning",
-        header: "意味",
-        cell: ({ row }) => (
-          <span className="text-sm text-foreground line-clamp-1 max-w-xs block">
-            {row.original.meaning}
-          </span>
-        ),
-      },
-      {
-        accessorKey: "frequency",
-        header: "頻度",
-        cell: ({ row }) => <StarRating value={row.original.frequency} />,
-      },
-      {
-        accessorKey: "play_count",
-        header: "練習",
-        cell: ({ row }) => <PlayCount count={row.original.play_count} />,
-      },
-    ],
-    [],
+    (): ColumnDef<ExpressionWithLesson>[] => {
+      const cols: ColumnDef<ExpressionWithLesson>[] = [];
+      if (!isVi) {
+        cols.push({
+          id: "lesson_no",
+          header: "テキスト",
+          cell: ({ row }) => (
+            <span className="font-mono text-xs text-foreground">
+              {row.original.lessons?.lesson_no ?? "—"}
+            </span>
+          ),
+        });
+      }
+      cols.push(
+        {
+          accessorKey: "category",
+          header: "種別",
+          cell: ({ row }) => (
+            <span className="text-xs text-foreground">
+              {row.original.category}
+            </span>
+          ),
+        },
+        {
+          accessorKey: "expression",
+          header: "フレーズ",
+          cell: ({ row }) => (
+            <span className="font-medium text-foreground">
+              {row.original.expression}
+            </span>
+          ),
+        },
+        {
+          accessorKey: "meaning",
+          header: "意味",
+          cell: ({ row }) => (
+            <span className="text-sm text-foreground line-clamp-1 max-w-xs block">
+              {row.original.meaning}
+            </span>
+          ),
+        },
+      );
+      if (isVi) {
+        cols.push(
+          {
+            id: "nuance",
+            header: "ニュアンス",
+            cell: ({ row }) => (
+              <span className="text-xs text-muted-foreground line-clamp-2 max-w-xs block">
+                {row.original.nuance ?? "—"}
+              </span>
+            ),
+          },
+          {
+            id: "word_notes",
+            header: "単語解説",
+            cell: ({ row }) => (
+              <div className="max-w-md">
+                <WordNotesInline notes={row.original.word_notes} />
+              </div>
+            ),
+          },
+        );
+      }
+      cols.push(
+        {
+          accessorKey: "frequency",
+          header: "頻度",
+          cell: ({ row }) => <StarRating value={row.original.frequency} />,
+        },
+        {
+          accessorKey: "play_count",
+          header: "練習",
+          cell: ({ row }) => <PlayCount count={row.original.play_count} />,
+        },
+      );
+      return cols;
+    },
+    [isVi],
   );
 
   if (loading) {
@@ -252,10 +314,13 @@ function PhraseTab({ onCountChange }: { onCountChange?: (n: number) => void }) {
 
 export default function ListPage() {
   const language = useCurrentLanguage();
+  const isVi = language === "vi";
   const [grammarCount, setGrammarCount] = useState<number | null>(null);
   const [phraseCount, setPhraseCount] = useState<number | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [showAddModal, setShowAddModal] = useState(false);
 
-  useEffect(() => {
+  const reloadCounts = useCallback(() => {
     const supabase = createClient();
     Promise.all([
       supabase
@@ -272,9 +337,23 @@ export default function ListPage() {
     });
   }, [language]);
 
+  useEffect(() => {
+    reloadCounts();
+  }, [reloadCounts, reloadKey]);
+
   return (
     <div className="space-y-6">
-      <PageHeader title="文法・フレーズ" />
+      <PageHeader
+        title="文法・フレーズ"
+        actions={
+          isVi ? (
+            <Button onClick={() => setShowAddModal(true)}>
+              <Plus className="mr-1.5 h-4 w-4" />
+              追加
+            </Button>
+          ) : undefined
+        }
+      />
 
       <Tabs defaultValue="grammar">
         <TabsList>
@@ -296,12 +375,19 @@ export default function ListPage() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="grammar" className="mt-4">
-          <GrammarTab onCountChange={setGrammarCount} />
+          <GrammarTab reloadKey={reloadKey} onCountChange={setGrammarCount} />
         </TabsContent>
         <TabsContent value="phrase" className="mt-4">
-          <PhraseTab onCountChange={setPhraseCount} />
+          <PhraseTab reloadKey={reloadKey} onCountChange={setPhraseCount} />
         </TabsContent>
       </Tabs>
+
+      {showAddModal && (
+        <ViAddModal
+          onClose={() => setShowAddModal(false)}
+          onSaved={() => setReloadKey((k) => k + 1)}
+        />
+      )}
     </div>
   );
 }
