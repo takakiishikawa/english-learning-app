@@ -45,7 +45,6 @@ export function RepeatingCountPicker({
     label: `${Math.min(n, total)}件`,
     desc: descs[i],
     icon: icons[i],
-    primary: i === 1,
   }));
 
   // Dedupe (e.g. when total < 10, all three options would say the same number)
