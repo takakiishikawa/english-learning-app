@@ -722,6 +722,59 @@ function deriveLessonStatus(row: LessonRow): Lesson["status"] {
   return allDone ? "習得済み" : "練習中";
 }
 
+function getLessonStatusCounts(
+  lessons: Lesson[],
+  grammarMap: Map<string, LessonStats>,
+  expressionMap: Map<string, LessonStats>,
+): { done: number; started: number; unregistered: number } {
+  let done = 0;
+  let started = 0;
+  let unregistered = 0;
+  for (const lesson of lessons) {
+    const row: LessonRow = {
+      ...lesson,
+      grammarStats: grammarMap.get(lesson.id) ?? {
+        total: 0,
+        done: 0,
+        started: 0,
+      },
+      expressionStats: expressionMap.get(lesson.id) ?? {
+        total: 0,
+        done: 0,
+        started: 0,
+      },
+    };
+    const status = deriveLessonStatus(row);
+    if (status === "習得済み") done++;
+    else if (status === "練習中") started++;
+    else unregistered++;
+  }
+  return { done, started, unregistered };
+}
+
+function LessonStatusSummary({
+  lessons,
+  grammarMap,
+  expressionMap,
+}: {
+  lessons: Lesson[];
+  grammarMap: Map<string, LessonStats>;
+  expressionMap: Map<string, LessonStats>;
+}) {
+  const { done, started, unregistered } = getLessonStatusCounts(
+    lessons,
+    grammarMap,
+    expressionMap,
+  );
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Tag color="success">習得済み {done}</Tag>
+      <Tag color="warning">練習中 {started}</Tag>
+      <Tag color="default">未登録 {unregistered}</Tag>
+    </div>
+  );
+}
+
 function LessonList({
   lessons,
   grammarMap,
@@ -1018,6 +1071,11 @@ export default function TextsPage() {
                 value={String(lvl)}
                 className="space-y-3 mt-4"
               >
+                <LessonStatusSummary
+                  lessons={byLevel(lvl)}
+                  grammarMap={grammarMap}
+                  expressionMap={expressionMap}
+                />
                 <LessonList
                   lessons={byLevel(lvl)}
                   grammarMap={grammarMap}
