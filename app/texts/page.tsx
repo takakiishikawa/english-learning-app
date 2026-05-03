@@ -271,7 +271,7 @@ function AddModal({
           <DialogTitle>テキスト追加</DialogTitle>
           <DialogDescription>
             {isEn
-              ? "教材テキストを貼り付けて、AIに文法・フレーズを抽出させます。"
+              ? "テキストを貼り付けて、AIに文法・フレーズを抽出させます。"
               : "ベトナム語の文法・フレーズ・例文をコピペすると、AIがCEFR A1相当の項目に仕分けて登録します。"}
           </DialogDescription>
         </DialogHeader>
@@ -386,7 +386,7 @@ function AddModal({
 
               <div className="space-y-2">
                 <Label htmlFor="material-text">
-                  {isEn ? "教材テキスト" : "ベトナム語の素材"}
+                  {isEn ? "テキスト" : "ベトナム語の素材"}
                 </Label>
                 <Textarea
                   id="material-text"
@@ -394,7 +394,7 @@ function AddModal({
                   onChange={(e) => setText(e.target.value)}
                   placeholder={
                     isEn
-                      ? "教材テキストをここに貼り付け..."
+                      ? "テキストをここに貼り付け..."
                       : "ベトナム語の単語・フレーズ・例文をここに貼り付け..."
                   }
                   className="min-h-40 font-mono text-xs"

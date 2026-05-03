@@ -33,7 +33,7 @@ export default function ConceptRoute() {
           {
             title: "インプット",
             description:
-              "英会話レッスン でレッスンを受け、教材テキストを NativeGo に貼り付ける",
+              "英会話レッスン でレッスンを受け、テキストを NativeGo に貼り付ける",
           },
           {
             title: "AI解析",

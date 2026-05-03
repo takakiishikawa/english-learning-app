@@ -173,7 +173,7 @@ export default function AddPage() {
         <Textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="英会話レッスンの教材テキストをここに貼り付け..."
+          placeholder="英会話レッスンのテキストをここに貼り付け..."
           className="min-h-48 font-mono text-sm"
         />
         <Button
