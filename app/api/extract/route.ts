@@ -8,6 +8,94 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
+// JSONSchema for Anthropic tool_use. Keeps Vietnamese-only fields optional
+// so EN extraction can also use the same tool without forcing them.
+const WORD_NOTES_SCHEMA = {
+  type: "array" as const,
+  description:
+    "Per-word Japanese gloss for words appearing in the main pattern/expression (NOT example dialogue).",
+  items: {
+    type: "object" as const,
+    properties: {
+      word: { type: "string" as const },
+      note: { type: "string" as const },
+    },
+    required: ["word", "note"],
+  },
+};
+
+const EXTRACT_INPUT_SCHEMA = {
+  type: "object" as const,
+  properties: {
+    grammar: {
+      type: "array" as const,
+      items: {
+        type: "object" as const,
+        properties: {
+          category: {
+            type: "string" as const,
+            description:
+              "Japanese category label (例: 文型, 代名詞, 否定, 疑問, 助詞). VI only; omit for EN.",
+          },
+          name: { type: "string" as const },
+          summary: { type: "string" as const },
+          detail: { type: ["string", "null"] as const },
+          examples: {
+            type: "array" as const,
+            items: { type: "string" as const },
+            description: "A/B/A 3-turn dialogue lines, max 4.",
+          },
+          usage_scene: { type: "string" as const },
+          frequency: {
+            type: "integer" as const,
+            minimum: 1,
+            maximum: 5,
+          },
+          word_notes: WORD_NOTES_SCHEMA,
+        },
+        required: ["name", "summary", "examples", "usage_scene", "frequency"],
+      },
+    },
+    expressions: {
+      type: "array" as const,
+      items: {
+        type: "object" as const,
+        properties: {
+          category: { type: "string" as const },
+          expression: { type: "string" as const },
+          meaning: { type: "string" as const },
+          conversation: {
+            type: "array" as const,
+            items: { type: "string" as const },
+            description: "A/B/A 3-turn dialogue lines, max 4.",
+          },
+          usage_scene: { type: "string" as const },
+          frequency: {
+            type: "integer" as const,
+            minimum: 1,
+            maximum: 5,
+          },
+          word_notes: WORD_NOTES_SCHEMA,
+          nuance: {
+            type: ["string", "null"] as const,
+            description:
+              "1-2 Japanese sentences on how the phrase comes across (politeness/register). VI only.",
+          },
+        },
+        required: [
+          "category",
+          "expression",
+          "meaning",
+          "conversation",
+          "usage_scene",
+          "frequency",
+        ],
+      },
+    },
+  },
+  required: ["grammar", "expressions"],
+};
+
 const SYSTEM_PROMPT_EN = `You are an English learning assistant. Extract grammar points and expressions from Native Camp lesson materials.
 
 User context: Takaki, 32-year-old Japanese male, lives alone in Ho Chi Minh City District 1-3 (Vietnam, 2-3 years), Product Manager at Sun Asterisk managing B2B recruitment platform and B2C education LMS, team of ~20 (engineers/QA/designers/BrSE). Daily life: strength training (bulking phase, 70kg→80kg goal, bench/pull-ups/squat/RDL), meditation, watching Korean dramas on Netflix, interested in cats (wants British Shorthair), visits cat cafes (CATFE/KIN NEKO), cafe hopping in District 1-3, rides motorbike, interested in philosophy/CBT/AI/product thinking. INTJ personality.
@@ -170,13 +258,17 @@ export async function POST(request: NextRequest) {
     // VI は word_notes 配列＋nuance で出力が膨らむため EN の2倍に確保
     max_tokens: lang === "vi" ? 8192 : 4096,
     system: lang === "vi" ? SYSTEM_PROMPT_VI : SYSTEM_PROMPT_EN,
+    tools: [
+      {
+        name: "save_extracted",
+        description:
+          "Save the extracted grammar items and expression items to the user's library.",
+        input_schema: EXTRACT_INPUT_SCHEMA,
+      },
+    ],
+    tool_choice: { type: "tool", name: "save_extracted" },
     messages: [{ role: "user", content: userMessage }],
   });
-
-  const content = message.content[0];
-  if (content.type !== "text") {
-    return NextResponse.json({ error: "Unexpected response" }, { status: 500 });
-  }
 
   if (message.stop_reason === "max_tokens") {
     console.error("[extract] hit max_tokens, output truncated", {
@@ -189,26 +281,18 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const rawText = content.text
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```\s*$/i, "")
-    .trim();
-
-  let result;
-  try {
-    result = JSON.parse(rawText);
-  } catch (err) {
-    console.error("[extract] JSON parse failed", {
+  const toolUse = message.content.find((c) => c.type === "tool_use");
+  if (!toolUse || toolUse.type !== "tool_use") {
+    console.error("[extract] no tool_use block in response", {
       lang,
-      err: err instanceof Error ? err.message : String(err),
-      preview: rawText.slice(0, 400),
       stopReason: message.stop_reason,
-      usage: message.usage,
+      contentTypes: message.content.map((c) => c.type),
     });
     return NextResponse.json(
-      { error: "Failed to parse response" },
+      { error: "Unexpected response shape" },
       { status: 500 },
     );
   }
-  return NextResponse.json(result);
+
+  return NextResponse.json(toolUse.input);
 }
