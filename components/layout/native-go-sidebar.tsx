@@ -58,7 +58,7 @@ const navItems: NavItem[] = [
   { href: "/texts", label: "テキスト", icon: FileText, languages: ["en"] },
   {
     href: "/list",
-    label: "Grammar & Phrases",
+    label: "文法・フレーズ",
     icon: BookOpen,
     languages: ["vi"],
   },

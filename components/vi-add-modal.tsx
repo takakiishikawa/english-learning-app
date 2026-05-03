@@ -158,7 +158,7 @@ export function ViAddModal({
     >
       <DialogContent className="max-w-4xl flex flex-col max-h-[88vh] gap-0 p-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
-          <DialogTitle>Add Grammar / Phrase</DialogTitle>
+          <DialogTitle>文法・フレーズを追加</DialogTitle>
           <DialogDescription>
             箇条書きで投げてください。仕分け後の確認画面で不要な行を削除できます。
           </DialogDescription>
@@ -211,23 +211,23 @@ export function ViAddModal({
               {grammar.length > 0 && (
                 <div className="space-y-2">
                   <Label className="text-xs uppercase tracking-wide text-muted-foreground">
-                    Grammar ({grammar.length})
+                    文法 ({grammar.length})
                   </Label>
                   <div className="rounded-md border overflow-hidden">
                     <table className="w-full text-sm">
                       <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
                         <tr>
                           <th className="text-left px-3 py-2 font-medium w-[100px]">
-                            Type
+                            種別
                           </th>
                           <th className="text-left px-3 py-2 font-medium w-[180px]">
-                            Pattern
+                            文法名
                           </th>
                           <th className="text-left px-3 py-2 font-medium">
-                            Summary
+                            概要
                           </th>
                           <th className="text-left px-3 py-2 font-medium w-[280px]">
-                            Words
+                            単語
                           </th>
                           <th className="w-10" />
                         </tr>
@@ -276,26 +276,26 @@ export function ViAddModal({
               {expressions.length > 0 && (
                 <div className="space-y-2">
                   <Label className="text-xs uppercase tracking-wide text-muted-foreground">
-                    Phrases ({expressions.length})
+                    フレーズ ({expressions.length})
                   </Label>
                   <div className="rounded-md border overflow-hidden">
                     <table className="w-full text-sm">
                       <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
                         <tr>
                           <th className="text-left px-3 py-2 font-medium w-[100px]">
-                            Type
+                            種別
                           </th>
                           <th className="text-left px-3 py-2 font-medium w-[180px]">
-                            Phrase
+                            フレーズ
                           </th>
                           <th className="text-left px-3 py-2 font-medium">
-                            Meaning
+                            意味
                           </th>
                           <th className="text-left px-3 py-2 font-medium">
-                            Nuance
+                            ニュアンス
                           </th>
                           <th className="text-left px-3 py-2 font-medium w-[260px]">
-                            Words
+                            単語
                           </th>
                           <th className="w-10" />
                         </tr>
@@ -354,19 +354,21 @@ export function ViAddModal({
             <div className="space-y-5">
               <div className="space-y-2">
                 <Label className="text-xs uppercase tracking-wide text-muted-foreground">
-                  Type (optional)
+                  種類 (任意)
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  指定すると入力すべてをその種類として扱います。未選択なら自動仕分け。
+                  指定すると入力すべてをその種類として扱います。未選択ならAIが文法/フレーズを自動仕分け。
                 </p>
                 <div className="flex gap-2">
-                  <KindToggle value="grammar" label="Grammar" />
-                  <KindToggle value="phrase" label="Phrase" />
+                  <KindToggle value="grammar" label="文法" />
+                  <KindToggle value="phrase" label="フレーズ" />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="vi-add-text">Items to learn</Label>
+                <Label htmlFor="vi-add-text">
+                  学びたい文法・フレーズ（箇条書き）
+                </Label>
                 <Textarea
                   id="vi-add-text"
                   value={text}

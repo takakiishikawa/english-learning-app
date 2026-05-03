@@ -136,7 +136,7 @@ function GrammarTab({
       if (!isVi) {
         cols.push({
           id: "lesson_no",
-          header: "Lesson",
+          header: "テキスト",
           cell: ({ row }) => (
             <span className="font-mono text-xs text-foreground">
               {row.original.lessons?.lesson_no ?? "—"}
@@ -147,14 +147,14 @@ function GrammarTab({
       if (isVi) {
         cols.push({
           id: "category",
-          header: "Type",
+          header: "種別",
           cell: ({ row }) => <CategoryTag category={row.original.category} />,
         });
       }
       cols.push(
         {
           accessorKey: "name",
-          header: "Pattern",
+          header: "文法名",
           cell: ({ row }) => (
             <span className="font-medium text-foreground">
               {row.original.name}
@@ -163,7 +163,7 @@ function GrammarTab({
         },
         {
           accessorKey: "summary",
-          header: "Summary",
+          header: "概要",
           cell: ({ row }) => (
             <span className="text-sm text-foreground line-clamp-1 max-w-xs block">
               {row.original.summary?.replace(/\\n/g, " ").split("\n")[0]}
@@ -174,7 +174,7 @@ function GrammarTab({
       if (isVi) {
         cols.push({
           id: "word_notes",
-          header: "Words",
+          header: "単語",
           cell: ({ row }) => (
             <div className="max-w-md">
               <WordNotesInline notes={row.original.word_notes} />
@@ -185,12 +185,12 @@ function GrammarTab({
       cols.push(
         {
           accessorKey: "frequency",
-          header: "Frequency",
+          header: "頻度",
           cell: ({ row }) => <StarRating value={row.original.frequency} />,
         },
         {
           accessorKey: "play_count",
-          header: "Practice",
+          header: "練習",
           cell: ({ row }) => <PlayCount count={row.original.play_count} />,
         },
         {
@@ -297,7 +297,7 @@ function PhraseTab({
       if (!isVi) {
         cols.push({
           id: "lesson_no",
-          header: "Lesson",
+          header: "テキスト",
           cell: ({ row }) => (
             <span className="font-mono text-xs text-foreground">
               {row.original.lessons?.lesson_no ?? "—"}
@@ -308,12 +308,12 @@ function PhraseTab({
       cols.push(
         {
           accessorKey: "category",
-          header: "Type",
+          header: "種別",
           cell: ({ row }) => <CategoryTag category={row.original.category} />,
         },
         {
           accessorKey: "expression",
-          header: "Phrase",
+          header: "フレーズ",
           cell: ({ row }) => (
             <span className="font-medium text-foreground">
               {row.original.expression}
@@ -322,7 +322,7 @@ function PhraseTab({
         },
         {
           accessorKey: "meaning",
-          header: "Meaning",
+          header: "意味",
           cell: ({ row }) => (
             <span className="text-sm text-foreground line-clamp-1 max-w-xs block">
               {row.original.meaning}
@@ -334,7 +334,7 @@ function PhraseTab({
         cols.push(
           {
             id: "nuance",
-            header: "Nuance",
+            header: "ニュアンス",
             cell: ({ row }) => (
               <span className="text-xs text-foreground line-clamp-2 max-w-xs block">
                 {row.original.nuance ?? "—"}
@@ -343,7 +343,7 @@ function PhraseTab({
           },
           {
             id: "word_notes",
-            header: "Words",
+            header: "単語",
             cell: ({ row }) => (
               <div className="max-w-md">
                 <WordNotesInline notes={row.original.word_notes} />
@@ -355,12 +355,12 @@ function PhraseTab({
       cols.push(
         {
           accessorKey: "frequency",
-          header: "Frequency",
+          header: "頻度",
           cell: ({ row }) => <StarRating value={row.original.frequency} />,
         },
         {
           accessorKey: "play_count",
-          header: "Practice",
+          header: "練習",
           cell: ({ row }) => <PlayCount count={row.original.play_count} />,
         },
         {
@@ -440,12 +440,12 @@ export default function ListPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Grammar & Phrases"
+        title="文法・フレーズ"
         actions={
           isVi ? (
             <Button onClick={() => setShowAddModal(true)}>
               <Plus className="mr-1.5 h-4 w-4" />
-              Add
+              追加
             </Button>
           ) : undefined
         }
@@ -454,7 +454,7 @@ export default function ListPage() {
       <Tabs defaultValue="grammar">
         <TabsList>
           <TabsTrigger value="grammar">
-            Grammar
+            文法
             {grammarCount !== null && (
               <Badge variant="secondary" className="ml-2 rounded-full">
                 {grammarCount}
@@ -462,7 +462,7 @@ export default function ListPage() {
             )}
           </TabsTrigger>
           <TabsTrigger value="phrase">
-            Phrases
+            フレーズ
             {phraseCount !== null && (
               <Badge variant="secondary" className="ml-2 rounded-full">
                 {phraseCount}

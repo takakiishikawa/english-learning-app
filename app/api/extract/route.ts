@@ -35,7 +35,7 @@ const EXTRACT_INPUT_SCHEMA = {
           category: {
             type: "string" as const,
             description:
-              "English category label (e.g. Pattern, Pronoun, Negation, Question, Particle, Tense, Modal, Classifier). VI only; omit for EN.",
+              "Japanese category label (例: 文型, 代名詞, 否定, 疑問, 助詞). VI only; omit for EN.",
           },
           name: { type: "string" as const },
           summary: { type: "string" as const },
@@ -156,7 +156,7 @@ Return a JSON object with exactly this structure:
 {
   "grammar": [
     {
-      "category": "category label in English (e.g. Pattern, Pronoun, Negation, Question, Particle, Tense, Modal, Number, Classifier, Word order). Always English, capitalized first letter.",
+      "category": "category in Japanese (例: 文型, 代名詞, 否定, 疑問, 助詞, 時制, 助動詞, 数詞 etc.)",
       "name": "grammar pattern (Vietnamese)",
       "summary": "1-line Japanese explanation",
       "detail": "Japanese explanation with 1-2 examples (or null)",
@@ -171,7 +171,7 @@ Return a JSON object with exactly this structure:
   ],
   "expressions": [
     {
-      "category": "category label in English (e.g. Greeting, Self-intro, Meal, Shopping, Work, Smalltalk, Money, Asking, Apology, Thanks). Always English, capitalized first letter.",
+      "category": "category in Japanese (例: 挨拶, 自己紹介, 食事, 買い物, 仕事, 雑談 etc.)",
       "expression": "the expression in Vietnamese",
       "meaning": "Japanese meaning",
       "conversation": ["A: ...", "B: ...", "A: ..."],
