@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@takaki/go-design-system";
-import { Zap, Flame, Mountain } from "lucide-react";
+import { Zap, Flame, Mountain, ChevronRight } from "lucide-react";
 
 const PRESETS = [30, 50, 100] as const;
 
@@ -83,7 +83,10 @@ export function RepeatingCountPicker({
                 {o.icon}
                 <span className="text-base font-medium">{o.label}</span>
               </span>
-              <span className="text-xs text-muted-foreground">{o.desc}</span>
+              <span className="flex items-center gap-2 opacity-70">
+                <span className="text-xs">{o.desc}</span>
+                <ChevronRight className="h-4 w-4" />
+              </span>
             </Button>
           ))}
         </div>
