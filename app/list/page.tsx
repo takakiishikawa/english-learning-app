@@ -177,7 +177,7 @@ function GrammarTab({
       if (isVi) {
         cols.push({
           id: "word_notes",
-          header: "単語解説",
+          header: "単語",
           cell: ({ row }) => (
             <div className="max-w-md">
               <WordNotesInline notes={row.original.word_notes} />
@@ -350,7 +350,7 @@ function PhraseTab({
           },
           {
             id: "word_notes",
-            header: "単語解説",
+            header: "単語",
             cell: ({ row }) => (
               <div className="max-w-md">
                 <WordNotesInline notes={row.original.word_notes} />

@@ -227,7 +227,7 @@ export function ViAddModal({
                             概要
                           </th>
                           <th className="text-left px-3 py-2 font-medium w-[280px]">
-                            単語解説
+                            単語
                           </th>
                           <th className="w-10" />
                         </tr>
@@ -301,7 +301,7 @@ export function ViAddModal({
                             ニュアンス
                           </th>
                           <th className="text-left px-3 py-2 font-medium w-[260px]">
-                            単語解説
+                            単語
                           </th>
                           <th className="w-10" />
                         </tr>
