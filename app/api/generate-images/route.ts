@@ -1,3 +1,4 @@
+import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
@@ -13,43 +14,45 @@ export async function GET() {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-const STORY_THEMES = [
-  "morning routine in a small apartment",
-  "buying coffee at a busy cafe",
-  "commuting on a crowded train",
-  "shopping at a supermarket",
-  "ordering food at a casual restaurant",
-  "meeting a friend at a park",
-  "working at an office desk",
-  "cooking dinner in a kitchen",
-  "walking a dog on a city street",
-  "studying at a quiet library",
-  "trying on clothes at a clothing store",
-  "asking for directions on a sidewalk",
-  "waiting at a bus stop",
-  "browsing books at a bookstore",
-  "having a picnic by a riverside",
-  "running errands at a post office",
-  "celebrating a birthday at home",
-  "exercising at a neighborhood gym",
-  "visiting a small flower shop",
-  "watching a street performance in a plaza",
-];
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-function hashString(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) {
-    h = (h * 31 + s.charCodeAt(i)) | 0;
-  }
-  return Math.abs(h);
+const FALLBACK_THEME = "running an everyday errand in the neighborhood";
+
+async function generateTheme(exclude: string[]): Promise<string> {
+  const excludeBlock =
+    exclude.length > 0
+      ? `\n\n既に使用済みの題材（これらと重複しない別シーンにしてください）:\n${exclude.map((e) => `- ${e}`).join("\n")}`
+      : "";
+
+  const message = await anthropic.messages.create({
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 120,
+    messages: [
+      {
+        role: "user",
+        content: `スピーキング練習用の4コマイラストの題材を1つ英語で考えてください。
+
+要件:
+- 社会人の日常で起こりがちな身近な場面（通勤、買い物、外食、家事、友人との交流、軽いトラブル等）
+- ニッチすぎず、奇抜すぎず、誰でも想像しやすいテーマ
+- 場所と状況が具体的に分かる短い英語フレーズ1行（例: "getting lost on the way home from a client meeting", "ordering takeout coffee before a morning meeting"）${excludeBlock}
+
+出力形式: 題材のフレーズのみを1行。引用符・番号・前置き・解説は一切含めない。`,
+      },
+    ],
+  });
+
+  const block = message.content[0];
+  if (!block || block.type !== "text") return FALLBACK_THEME;
+  const cleaned = block.text
+    .trim()
+    .replace(/^["'`]+|["'`.\s]+$/g, "")
+    .split("\n")[0]
+    ?.trim();
+  return cleaned && cleaned.length > 0 ? cleaned : FALLBACK_THEME;
 }
 
-function pickTheme(seed: string): string {
-  return STORY_THEMES[hashString(seed) % STORY_THEMES.length];
-}
-
-function buildImagePrompt(seed: string): string {
-  const theme = pickTheme(seed);
+function buildImagePrompt(theme: string): string {
   return `Four sequential illustration panels arranged in a 2x2 grid, showing a wordless visual story about: ${theme}.
 
 Panel 1 (top-left): Establish the scene and introduce the characters.
@@ -127,6 +130,7 @@ export async function POST(request: NextRequest) {
   console.log("[generate-images] 対象件数:", items.length);
 
   const results = [];
+  const usedThemes: string[] = [];
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
@@ -147,7 +151,10 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const imagePrompt = buildImagePrompt(item.id);
+      const theme = await generateTheme(usedThemes);
+      usedThemes.push(theme);
+      console.log(`[generate-images] 題材: ${theme}`);
+      const imagePrompt = buildImagePrompt(theme);
 
       console.log(`[generate-images] Imagen API呼び出し中: ${item.name}`);
       const response = await callImagenAPI(imagePrompt, apiKey);
