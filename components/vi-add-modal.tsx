@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import {
-  Badge,
   Button,
   cn,
   Dialog,
@@ -24,6 +23,7 @@ import type {
   ExtractedGrammar,
 } from "@/lib/types";
 import { WordNotesInline } from "@/components/word-notes";
+import { CategoryTag } from "@/components/category-tag";
 
 type Kind = "grammar" | "phrase";
 
@@ -239,13 +239,7 @@ export function ViAddModal({
                             className="border-t align-top hover:bg-muted/30"
                           >
                             <td className="px-3 py-2">
-                              {g.category ? (
-                                <Badge variant="outline" className="text-[11px]">
-                                  {g.category}
-                                </Badge>
-                              ) : (
-                                <span className="text-xs text-muted-foreground">—</span>
-                              )}
+                              <CategoryTag category={g.category} />
                             </td>
                             <td className="px-3 py-2 font-medium text-[color:var(--color-grammar)]">
                               {g.name}
@@ -313,9 +307,7 @@ export function ViAddModal({
                             className="border-t align-top hover:bg-muted/30"
                           >
                             <td className="px-3 py-2">
-                              <Badge variant="outline" className="text-[11px]">
-                                {e.category}
-                              </Badge>
+                              <CategoryTag category={e.category} />
                             </td>
                             <td className="px-3 py-2 font-medium text-[color:var(--color-phrase)]">
                               {e.expression}

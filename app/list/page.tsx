@@ -19,6 +19,7 @@ import { useCurrentLanguage } from "@/lib/language-context";
 import { Plus, Star, Trash2 } from "lucide-react";
 import { ViAddModal } from "@/components/vi-add-modal";
 import { WordNotesInline } from "@/components/word-notes";
+import { CategoryTag } from "@/components/category-tag";
 import {
   deleteGrammar,
   deleteExpression,
@@ -147,11 +148,7 @@ function GrammarTab({
         cols.push({
           id: "category",
           header: "種別",
-          cell: ({ row }) => (
-            <span className="text-xs text-foreground">
-              {row.original.category ?? "—"}
-            </span>
-          ),
+          cell: ({ row }) => <CategoryTag category={row.original.category} />,
         });
       }
       cols.push(
@@ -312,11 +309,7 @@ function PhraseTab({
         {
           accessorKey: "category",
           header: "種別",
-          cell: ({ row }) => (
-            <span className="text-xs text-foreground">
-              {row.original.category}
-            </span>
-          ),
+          cell: ({ row }) => <CategoryTag category={row.original.category} />,
         },
         {
           accessorKey: "expression",
