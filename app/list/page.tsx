@@ -133,6 +133,17 @@ function GrammarTab({
           ),
         });
       }
+      if (isVi) {
+        cols.push({
+          id: "category",
+          header: "種別",
+          cell: ({ row }) => (
+            <span className="text-xs text-foreground">
+              {row.original.category ?? "—"}
+            </span>
+          ),
+        });
+      }
       cols.push(
         {
           accessorKey: "name",

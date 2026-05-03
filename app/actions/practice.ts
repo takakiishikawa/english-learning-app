@@ -119,6 +119,7 @@ export async function saveGrammar(
     usage_scene: string;
     frequency: number;
     word_notes?: WordNote[] | null;
+    category?: string | null;
   }[],
   lessonId?: string,
 ): Promise<{ id: string; name: string }[]> {
@@ -136,6 +137,7 @@ export async function saveGrammar(
     lesson_id: lessonId ?? null,
     language,
     word_notes: g.word_notes ?? null,
+    category: g.category ?? null,
   }));
 
   const { data, error } = await supabase

@@ -183,6 +183,9 @@ export function ViAddModal({
                     <table className="w-full text-sm">
                       <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
                         <tr>
+                          <th className="text-left px-3 py-2 font-medium w-[100px]">
+                            種別
+                          </th>
                           <th className="text-left px-3 py-2 font-medium w-[180px]">
                             文法名
                           </th>
@@ -201,6 +204,15 @@ export function ViAddModal({
                             key={`g-${i}`}
                             className="border-t align-top hover:bg-muted/30"
                           >
+                            <td className="px-3 py-2">
+                              {g.category ? (
+                                <Badge variant="outline" className="text-[11px]">
+                                  {g.category}
+                                </Badge>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">—</span>
+                              )}
+                            </td>
                             <td className="px-3 py-2 font-medium text-[color:var(--color-grammar)]">
                               {g.name}
                             </td>

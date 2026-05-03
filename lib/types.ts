@@ -27,6 +27,7 @@ export interface Grammar {
   image_url: string | null;
   language: Language;
   word_notes: WordNote[] | null;
+  category: string | null;
 }
 
 export interface SpeakingLog {
@@ -141,6 +142,7 @@ export interface ExtractedGrammar {
   usage_scene: string;
   frequency: number;
   word_notes?: WordNote[];
+  category?: string;
 }
 
 export interface ExtractedExpression {

@@ -68,6 +68,7 @@ Return a JSON object with exactly this structure:
 {
   "grammar": [
     {
+      "category": "category in Japanese (例: 文型, 代名詞, 否定, 疑問, 助詞, 時制, 助動詞, 数詞 etc.)",
       "name": "grammar pattern (Vietnamese)",
       "summary": "1-line Japanese explanation",
       "detail": "Japanese explanation with 1-2 examples (or null)",
@@ -98,10 +99,13 @@ Return a JSON object with exactly this structure:
 }
 
 word_notes rules (重要):
-- Required for both grammar and expressions. Cover EVERY non-trivial word that appears in "name" / "expression" / "examples" / "conversation". Skip only obvious cognates / numbers.
-- "word" is the Vietnamese word as it appears (lowercased, with diacritics). For multi-word units that act as one (e.g. "cảm ơn"), keep them together.
-- "note" is a SHORT Japanese gloss (1 phrase, ~20 chars). If the word changes nuance by tone/context, briefly mention it.
-- Order: follow the order the words appear in the main pattern / phrase.
+- ONLY include words that actually appear in the grammar "name" or expression "expression" itself.
+  Do NOT include words that only appear in the example conversation lines / usage_scene / detail.
+- Multi-word fixed units (e.g. "cảm ơn", "phải không", "không phải là") stay as one entry.
+- "note" is a SHORT Japanese gloss (1 phrase, ~20 chars).
+- Typical count: grammar 2-5 entries, expression 2-5 entries.
+- Order: same as the words appear in the source pattern / phrase (left to right).
+- Skip pure placeholders ("S", "V", "O", "名詞", "動詞", "形容詞") and numbers / obvious cognates.
 
 nuance rules (expressions only):
 - 1-2 sentences in Japanese describing how this phrase comes across to the listener (politeness level, age/relationship register, warmth, formality, common alternatives).
