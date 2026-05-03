@@ -290,3 +290,37 @@ export async function updateLessonStatus(
   revalidatePath("/lessons");
   revalidatePath("/texts");
 }
+
+export async function saveLessons(
+  level: number,
+  items: { lesson_no: string; topic: string }[],
+): Promise<{ inserted: number; skipped: number }> {
+  const supabase = await createClient();
+  const language = await getCurrentLanguage();
+
+  const { data: existing } = await supabase
+    .from("lessons")
+    .select("lesson_no")
+    .eq("level", level)
+    .eq("language", language);
+
+  const existingNos = new Set((existing ?? []).map((l) => l.lesson_no));
+  const newRows = items
+    .filter((i) => i.lesson_no && i.topic && !existingNos.has(i.lesson_no))
+    .map((i) => ({
+      level,
+      lesson_no: i.lesson_no,
+      topic: i.topic,
+      status: "未登録" as const,
+      language,
+    }));
+
+  if (newRows.length > 0) {
+    const { error } = await supabase.from("lessons").insert(newRows);
+    if (error) throw error;
+  }
+
+  revalidatePath("/texts");
+  revalidatePath("/lessons");
+  return { inserted: newRows.length, skipped: items.length - newRows.length };
+}

@@ -29,12 +29,18 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   toast,
 } from "@takaki/go-design-system";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   saveGrammar,
   saveExpressions,
+  saveLessons,
   updateLessonStatus,
 } from "@/app/actions/practice";
 import type {
@@ -44,7 +50,14 @@ import type {
   ExtractedExpression,
 } from "@/lib/types";
 import Link from "next/link";
-import { Star, BookOpen, MessageSquare, Plus } from "lucide-react";
+import {
+  Star,
+  BookOpen,
+  MessageSquare,
+  Plus,
+  ListPlus,
+  Trash2,
+} from "lucide-react";
 import { useCurrentLanguage } from "@/lib/language-context";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -451,6 +464,219 @@ function AddModal({
   );
 }
 
+// ─── AddLessonsModal ─────────────────────────────────────────────────────────
+
+const LEVEL_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+type ExtractedLesson = { lesson_no: string; topic: string };
+
+function AddLessonsModal({
+  onClose,
+  onSaved,
+}: {
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [level, setLevel] = useState<number>(1);
+  const [text, setText] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [items, setItems] = useState<ExtractedLesson[] | null>(null);
+
+  async function handleExtract() {
+    if (!text.trim()) return;
+    setLoading(true);
+    setItems(null);
+    try {
+      const res = await fetch("/api/extract-lessons", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      if (!res.ok) throw new Error();
+      const data = (await res.json()) as { lessons: ExtractedLesson[] };
+      if (!data.lessons?.length) {
+        toast.error("レッスンを抽出できませんでした");
+        return;
+      }
+      setItems(data.lessons);
+    } catch {
+      toast.error("抽出に失敗しました");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSave() {
+    if (!items?.length) return;
+    setSaving(true);
+    try {
+      const result = await saveLessons(level, items);
+      if (result.skipped > 0) {
+        toast.success(
+          `${result.inserted}件追加しました（${result.skipped}件は既存のためスキップ）`,
+        );
+      } else {
+        toast.success(`${result.inserted}件追加しました`);
+      }
+      onSaved();
+      onClose();
+    } catch {
+      toast.error("保存に失敗しました");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function updateItem(index: number, patch: Partial<ExtractedLesson>) {
+    setItems((prev) =>
+      prev ? prev.map((it, i) => (i === index ? { ...it, ...patch } : it)) : prev,
+    );
+  }
+
+  function removeItem(index: number) {
+    setItems((prev) => (prev ? prev.filter((_, i) => i !== index) : prev));
+  }
+
+  return (
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className="max-w-2xl flex flex-col max-h-[85vh] gap-0 p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b">
+          <DialogTitle>レッスン追加</DialogTitle>
+          <DialogDescription>
+            Native Campのレッスン一覧を貼り付けると、AIがNo.とトピックを抽出します。
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex-1 overflow-y-auto px-6 py-5">
+          {items ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Level {level} に {items.length} 件のレッスンを追加します
+                </p>
+              </div>
+              <div className="rounded-md border divide-y">
+                <div className="grid grid-cols-[80px_1fr_40px] gap-2 px-3 py-2 bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
+                  <span>No.</span>
+                  <span>トピック</span>
+                  <span />
+                </div>
+                {items.map((it, i) => (
+                  <div
+                    key={i}
+                    className="grid grid-cols-[80px_1fr_40px] gap-2 px-3 py-2 items-center"
+                  >
+                    <Textarea
+                      value={it.lesson_no}
+                      onChange={(e) =>
+                        updateItem(i, { lesson_no: e.target.value })
+                      }
+                      className="h-8 min-h-8 font-mono text-xs px-2 py-1 resize-none"
+                    />
+                    <Textarea
+                      value={it.topic}
+                      onChange={(e) => updateItem(i, { topic: e.target.value })}
+                      className="h-8 min-h-8 text-sm px-2 py-1 resize-none"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeItem(i)}
+                      aria-label="削除"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : loading ? (
+            <div className="flex flex-col items-center gap-3 py-12">
+              <Spinner size="lg" />
+              <p className="text-sm text-muted-foreground">AIが抽出中...</p>
+            </div>
+          ) : (
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="level-select">Level</Label>
+                <Select
+                  value={String(level)}
+                  onValueChange={(v) => setLevel(Number(v))}
+                >
+                  <SelectTrigger id="level-select" className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LEVEL_OPTIONS.map((n) => (
+                      <SelectItem key={n} value={String(n)}>
+                        Level {n}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="lesson-list-text">レッスン一覧</Label>
+                <Textarea
+                  id="lesson-list-text"
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  placeholder={
+                    "1-1: Our experience\n2026-04-24 16:53\n1-2: Completion of the behavior\n..."
+                  }
+                  className="min-h-48 font-mono text-xs"
+                />
+                <p className="text-xs text-muted-foreground">
+                  日付行や「Level 1」などの見出しは自動で除外されます。
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {!loading && (
+          <DialogFooter className="px-6 py-4 border-t bg-muted/30">
+            {items ? (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => setItems(null)}
+                  disabled={saving}
+                >
+                  入力に戻る
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  disabled={saving || items.length === 0}
+                >
+                  {saving && <Spinner size="sm" className="mr-2" />}
+                  {saving ? "保存中..." : `${items.length}件を保存`}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" onClick={onClose}>
+                  キャンセル
+                </Button>
+                <Button onClick={handleExtract} disabled={!text.trim()}>
+                  AIで仕分けする
+                </Button>
+              </>
+            )}
+          </DialogFooter>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ─── LessonList (DataTable) ───────────────────────────────────────────────────
 
 type LessonRow = Lesson & {
@@ -680,6 +906,8 @@ export default function TextsPage() {
   );
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddLessonsModal, setShowAddLessonsModal] = useState(false);
+  const [activeLevel, setActiveLevel] = useState<string>("1");
 
   const loadData = useCallback(async () => {
     const [lessonsRes, grammarRes, expressionRes] = await Promise.all([
@@ -743,6 +971,17 @@ export default function TextsPage() {
 
   const unregisteredLessons = lessons.filter((l) => l.status === "未登録");
 
+  const visibleLevels = Array.from(
+    new Set(lessons.map((l) => l.level)),
+  ).sort((a, b) => a - b);
+
+  useEffect(() => {
+    if (visibleLevels.length === 0) return;
+    if (!visibleLevels.includes(Number(activeLevel))) {
+      setActiveLevel(String(visibleLevels[0]));
+    }
+  }, [visibleLevels, activeLevel]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64 text-muted-foreground">
@@ -763,6 +1002,15 @@ export default function TextsPage() {
                 文法・フレーズ
               </Link>
             </Button>
+            {isEn && (
+              <Button
+                variant="outline"
+                onClick={() => setShowAddLessonsModal(true)}
+              >
+                <ListPlus className="mr-1.5 h-4 w-4" />
+                レッスン追加
+              </Button>
+            )}
             <Button onClick={() => setShowAddModal(true)}>
               <Plus className="mr-1.5 h-4 w-4" />
               テキスト追加
@@ -772,42 +1020,38 @@ export default function TextsPage() {
       />
 
       {isEn ? (
-        <Tabs defaultValue="1">
-          <TabsList>
-            <TabsTrigger value="1">
-              Level 1{" "}
-              <Badge variant="secondary" className="ml-2 rounded-full">
-                {byLevel(1).length}
-              </Badge>
-            </TabsTrigger>
-            <TabsTrigger value="2">
-              Level 2{" "}
-              <Badge variant="secondary" className="ml-2 rounded-full">
-                {byLevel(2).length}
-              </Badge>
-            </TabsTrigger>
-            <TabsTrigger value="3">
-              Level 3{" "}
-              <Badge variant="secondary" className="ml-2 rounded-full">
-                {byLevel(3).length}
-              </Badge>
-            </TabsTrigger>
-          </TabsList>
+        visibleLevels.length === 0 ? (
+          <div className="rounded-md border bg-muted/30 px-6 py-12 text-center text-sm text-muted-foreground">
+            レッスンが登録されていません。「レッスン追加」から登録してください。
+          </div>
+        ) : (
+          <Tabs value={activeLevel} onValueChange={setActiveLevel}>
+            <TabsList>
+              {visibleLevels.map((lvl) => (
+                <TabsTrigger key={lvl} value={String(lvl)}>
+                  Level {lvl}{" "}
+                  <Badge variant="secondary" className="ml-2 rounded-full">
+                    {byLevel(lvl).length}
+                  </Badge>
+                </TabsTrigger>
+              ))}
+            </TabsList>
 
-          {[1, 2, 3].map((lvl) => (
-            <TabsContent
-              key={lvl}
-              value={String(lvl)}
-              className="space-y-3 mt-4"
-            >
-              <LessonList
-                lessons={byLevel(lvl)}
-                grammarMap={grammarMap}
-                expressionMap={expressionMap}
-              />
-            </TabsContent>
-          ))}
-        </Tabs>
+            {visibleLevels.map((lvl) => (
+              <TabsContent
+                key={lvl}
+                value={String(lvl)}
+                className="space-y-3 mt-4"
+              >
+                <LessonList
+                  lessons={byLevel(lvl)}
+                  grammarMap={grammarMap}
+                  expressionMap={expressionMap}
+                />
+              </TabsContent>
+            ))}
+          </Tabs>
+        )
       ) : (
         <FlatTextList grammars={grammars} expressions={expressions} />
       )}
@@ -817,6 +1061,13 @@ export default function TextsPage() {
           unregisteredLessons={unregisteredLessons}
           language={language}
           onClose={() => setShowAddModal(false)}
+          onSaved={loadData}
+        />
+      )}
+
+      {showAddLessonsModal && (
+        <AddLessonsModal
+          onClose={() => setShowAddLessonsModal(false)}
           onSaved={loadData}
         />
       )}
