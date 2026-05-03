@@ -14,7 +14,6 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  Combobox,
   DataTable,
   Label,
   Separator,
@@ -260,11 +259,6 @@ function AddModal({
     }
   }
 
-  const lessonOptions = unregisteredLessons.map((l) => ({
-    value: l.id,
-    label: `${l.lesson_no} — ${l.topic}`,
-  }));
-
   return (
     <Dialog
       open
@@ -371,14 +365,21 @@ function AddModal({
                       未登録のレッスンがありません
                     </p>
                   ) : (
-                    <Combobox
-                      options={lessonOptions}
+                    <Select
                       value={selectedLessonId}
                       onValueChange={setSelectedLessonId}
-                      placeholder="レッスンを選択..."
-                      searchPlaceholder="レッスン番号またはトピックで検索..."
-                      emptyText="該当するレッスンがありません"
-                    />
+                    >
+                      <SelectTrigger id="lesson-select" className="w-full">
+                        <SelectValue placeholder="レッスンを選択..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {unregisteredLessons.map((l) => (
+                          <SelectItem key={l.id} value={l.id}>
+                            {l.lesson_no} — {l.topic}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   )}
                 </div>
               )}
