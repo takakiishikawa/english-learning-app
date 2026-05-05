@@ -28,6 +28,7 @@ import {
 import { ConversationLines } from "@/components/conversation-lines";
 import { WordNotesPanel } from "@/components/word-notes";
 import { RepeatingCountPicker } from "@/components/repeating-count-picker";
+import { RepeatingCompleteModal } from "@/components/repeating-complete-modal";
 
 function StarRating({ value }: { value: number }) {
   return (
@@ -109,7 +110,6 @@ export default function GrammarRepeatingPage() {
       .from("grammar")
       .select("*")
       .eq("language", language)
-      .lt("play_count", 10)
       .order("created_at", { ascending: true });
     setAllItems(data ?? []);
     setLoading(false);
@@ -281,7 +281,6 @@ export default function GrammarRepeatingPage() {
     return (
       <RepeatingCountPicker
         total={allItems.length}
-        kind="grammar"
         onSelect={startSession}
       />
     );
@@ -399,37 +398,30 @@ export default function GrammarRepeatingPage() {
         </div>
       </div>
 
-      {showComplete && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card border rounded-lg p-8 text-center space-y-4 w-full max-w-sm border border-border">
-            <div className="rounded-full bg-[color:var(--color-success-subtle)] p-4 w-20 h-20 flex items-center justify-center mx-auto">
-              <CheckCircle2 className="h-10 w-10 text-[color:var(--color-success)]" />
-            </div>
-            <h2 className="text-2xl font-semibold">お疲れ様でした！</h2>
-            <p className="text-muted-foreground">文法リピーティング 1周完了</p>
-
-            <div className="space-y-2 pt-2">
-              <CompletionNavButton
-                label="文法リピーティング"
-                done={todayStatus.grammar}
-                onClick={restartSession}
-              />
-              <CompletionNavButton
-                label="フレーズリピーティング"
-                done={todayStatus.expression}
-                onClick={() => router.push("/repeating/expression")}
-              />
-              <Button
-                variant="ghost"
-                onClick={() => router.push("/")}
-                className="w-full text-muted-foreground"
-              >
-                ダッシュボードに戻る
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <RepeatingCompleteModal
+        open={showComplete}
+        title="お疲れ様でした！"
+        subtitle="文法リピーティングを 1 周完了しました"
+        itemCount={items.length}
+      >
+        <CompletionNavButton
+          label="文法リピーティング"
+          done={todayStatus.grammar}
+          onClick={restartSession}
+        />
+        <CompletionNavButton
+          label="フレーズリピーティング"
+          done={todayStatus.expression}
+          onClick={() => router.push("/repeating/expression")}
+        />
+        <Button
+          variant="ghost"
+          onClick={() => router.push("/")}
+          className="w-full text-muted-foreground"
+        >
+          ダッシュボードに戻る
+        </Button>
+      </RepeatingCompleteModal>
     </>
   );
 }

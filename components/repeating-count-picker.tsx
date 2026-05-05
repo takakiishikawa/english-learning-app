@@ -5,13 +5,14 @@ import {
   Button,
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@takaki/go-design-system";
 import { Zap, Flame, Mountain, ChevronRight } from "lucide-react";
+import { useCurrentLanguage } from "@/lib/language-context";
 
-const PRESETS = [30, 50, 100] as const;
+const PRESETS_EN = [30, 50, 100] as const;
+const PRESETS_VI = [10, 20, 30] as const;
 
 type Option = {
   count: number;
@@ -23,15 +24,13 @@ type Option = {
 
 export function RepeatingCountPicker({
   total,
-  kind,
   onSelect,
 }: {
   total: number;
-  kind: "grammar" | "expression";
   onSelect: (count: number) => void;
 }) {
   const router = useRouter();
-  const label = kind === "grammar" ? "文法" : "フレーズ";
+  const language = useCurrentLanguage();
 
   const descs = ["サクッと", "集中して", "がっつり"] as const;
   const icons = [
@@ -40,7 +39,8 @@ export function RepeatingCountPicker({
     <Mountain key="m" className="h-4 w-4" />,
   ];
 
-  const options: Option[] = PRESETS.map((n, i) => ({
+  const presets = language === "vi" ? PRESETS_VI : PRESETS_EN;
+  const options: Option[] = presets.map((n, i) => ({
     count: Math.min(n, total),
     label: `${Math.min(n, total)}件`,
     desc: descs[i],
@@ -62,12 +62,9 @@ export function RepeatingCountPicker({
         if (!open) router.push("/");
       }}
     >
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="sm:max-w-sm" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>今日のペースを選ぼう</DialogTitle>
-          <DialogDescription>
-            {label}リピーティング・練習中 {total} 件
-          </DialogDescription>
         </DialogHeader>
         <div className="space-y-2 pt-2">
           {uniqueOptions.map((o) => (
