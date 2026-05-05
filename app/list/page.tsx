@@ -11,6 +11,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
+  Tag,
   toast,
 } from "@takaki/go-design-system";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -57,6 +58,28 @@ function sortByLessonNo<T extends { lessons: { lesson_no: string } | null }>(
     }
     return 0;
   });
+}
+
+function PlayCountStatusSummary({
+  items,
+}: {
+  items: { play_count: number }[];
+}) {
+  let done = 0;
+  let started = 0;
+  let unregistered = 0;
+  for (const it of items) {
+    if (it.play_count >= 10) done++;
+    else if (it.play_count > 0) started++;
+    else unregistered++;
+  }
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Tag color="success">習得済み {done}</Tag>
+      <Tag color="warning">練習中 {started}</Tag>
+      <Tag color="default">未登録 {unregistered}</Tag>
+    </div>
+  );
 }
 
 function PlayCount({ count, max = 10 }: { count: number; max?: number }) {
@@ -225,6 +248,7 @@ function GrammarTab({
 
   return (
     <div className="space-y-3">
+      <PlayCountStatusSummary items={items} />
       <DataTable
         columns={columns}
         data={items}
@@ -395,6 +419,7 @@ function PhraseTab({
 
   return (
     <div className="space-y-3">
+      <PlayCountStatusSummary items={items} />
       <DataTable
         columns={columns}
         data={items}
