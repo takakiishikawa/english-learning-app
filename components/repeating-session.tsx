@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { cn, toast } from "@takaki/go-design-system";
+import {
+  cn,
+  toast,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@takaki/go-design-system";
 import type { Language, WordNote } from "@/lib/types";
 import {
   ChevronLeft,
@@ -39,6 +46,10 @@ import {
 } from "lucide-react";
 
 const SPEEDS = [0.6, 0.8, 1.0, 1.2] as const;
+
+// 黒背景ツールチップ（アクティビティヒートマップと統一）
+const TOOLTIP_CLS =
+  "bg-[#1f1d1a] text-[12px] text-white dark:bg-[#2a2833] dark:text-[#f0eef4]";
 
 const TOPIC_ICON_MAP: Record<string, LucideIcon> = {
   "chef-hat": ChefHat,
@@ -179,7 +190,7 @@ function TopicChip({ label, icon }: { label: string; icon: string | null }) {
   );
 }
 
-// ─── Study controls — flag toggle (+ tooltip) + memo (hover) ────────
+// ─── Study controls — flag toggle (+ tooltip) + memo (tooltip) ──────
 function StudyControls({
   studyFlag,
   onToggleStudyFlag,
@@ -190,36 +201,50 @@ function StudyControls({
   studyNote?: string | null;
 }) {
   return (
-    <span className="inline-flex items-center gap-1.5">
-      <span className="group relative inline-flex">
-        <button
-          type="button"
-          onClick={onToggleStudyFlag}
-          aria-pressed={studyFlag}
-          className={cn(
-            "flex h-8 w-8 items-center justify-center rounded-full border transition-colors",
-            studyFlag
-              ? "border-[color:var(--color-primary)] bg-[var(--color-primary)]/10 text-[color:var(--color-primary)]"
-              : "border-border text-muted-foreground hover:text-foreground",
-          )}
-        >
-          <Flag className={cn("h-4 w-4", studyFlag && "fill-current")} />
-        </button>
-        <span className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 hidden w-60 -translate-x-1/2 rounded-lg border border-border bg-background px-3 py-2 text-center text-xs leading-relaxed text-muted-foreground shadow-lg group-hover:block">
-          {studyFlag
-            ? "「学習したい」リストに登録済み。クリックで解除します。"
-            : "外部で学習したい文法・フレーズの目印。ライブラリの「学習したい」リストに表示されます。"}
-        </span>
+    <TooltipProvider delayDuration={150}>
+      <span className="inline-flex items-center gap-1.5">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={onToggleStudyFlag}
+              aria-pressed={studyFlag}
+              className={cn(
+                "flex h-8 w-8 items-center justify-center rounded-full border transition-colors",
+                studyFlag
+                  ? "border-[color:var(--color-primary)] bg-[var(--color-primary)]/10 text-[color:var(--color-primary)]"
+                  : "border-border text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <Flag className={cn("h-4 w-4", studyFlag && "fill-current")} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className={cn("max-w-[240px]", TOOLTIP_CLS)}>
+            {studyFlag
+              ? "「学習したい」リストに登録済み。クリックで解除します。"
+              : "外部で学習したい文法・フレーズの目印。ライブラリの「学習したい」リストに表示されます。"}
+          </TooltipContent>
+        </Tooltip>
+        {studyNote && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground">
+                <MessageSquareText className="h-4 w-4" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent
+              side="top"
+              className={cn(
+                "max-w-[260px] whitespace-pre-wrap text-left",
+                TOOLTIP_CLS,
+              )}
+            >
+              {studyNote}
+            </TooltipContent>
+          </Tooltip>
+        )}
       </span>
-      {studyNote && (
-        <span className="group relative flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground">
-          <MessageSquareText className="h-4 w-4" />
-          <span className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 hidden w-64 -translate-x-1/2 whitespace-pre-wrap rounded-lg border border-border bg-background px-3 py-2 text-left text-xs leading-relaxed text-foreground shadow-lg group-hover:block">
-            {studyNote}
-          </span>
-        </span>
-      )}
-    </span>
+    </TooltipProvider>
   );
 }
 
@@ -419,7 +444,7 @@ function Bubble({
   );
 }
 
-// ─── Word list (VI — floats right, grouped by conversation line) ────
+// ─── Word list (VI — full-height panel on the right, left border) ───
 function WordList({ notes, lines }: { notes: WordNote[]; lines: string[] }) {
   const lineTexts = lines.map(stripSpeaker);
   const lineOf = (word: string): number => {
@@ -439,7 +464,7 @@ function WordList({ notes, lines }: { notes: WordNote[]; lines: string[] }) {
   if (byLine.has(-1)) keys.push(-1);
 
   return (
-    <aside className="absolute right-6 top-1/2 max-h-[88%] w-[240px] -translate-y-1/2 overflow-y-auto rounded-2xl border border-border bg-card p-4 shadow-[0_6px_24px_rgba(15,23,42,0.07)]">
+    <aside className="absolute inset-y-0 right-0 w-[268px] overflow-y-auto border-l border-border bg-background px-5 py-5">
       <div className="mb-3 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
         <BookOpen className="h-3.5 w-3.5" />
         単語
@@ -594,7 +619,7 @@ export function RepeatingSession({
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-background">
       {/* Header strip — kind label + progress on the left */}
-      <header className="flex items-center gap-3 border-b border-border px-6 py-3">
+      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border px-6">
         <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
           {kindLabel}リピーティング
         </span>
@@ -622,127 +647,132 @@ export function RepeatingSession({
         </button>
       </header>
 
-      {/* Stage — vertically centered, compact */}
-      <div className="relative flex flex-1 flex-col items-center justify-center gap-6 overflow-y-auto px-6 py-4">
-        {/* Pattern block — plain, no border. Stars sit above the title. */}
-        <div className="max-w-[680px] text-center">
-          <div className="mb-2 flex justify-center">
-            <Stars value={importance} />
+      {/* Body — stage + player, with the VI word list spanning full height */}
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        {/* Stage — vertically centered, compact */}
+        <div className="flex flex-1 flex-col items-center justify-center gap-6 overflow-y-auto px-6 py-4">
+          {/* Pattern block — plain, no border. Stars sit above the title. */}
+          <div className="max-w-[680px] text-center">
+            <div className="mb-2 flex justify-center">
+              <Stars value={importance} />
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-2.5">
+              <h1 className="text-[28px] font-bold leading-tight tracking-tight text-foreground">
+                {title}
+              </h1>
+              <StudyControls
+                studyFlag={studyFlag}
+                onToggleStudyFlag={onToggleStudyFlag}
+                studyNote={studyNote}
+              />
+            </div>
+            {summary && (
+              <p className="mx-auto mt-2.5 max-w-[600px] text-sm leading-relaxed text-muted-foreground">
+                {summary}
+              </p>
+            )}
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-2.5">
-            <h1 className="text-[28px] font-bold leading-tight tracking-tight text-foreground">
-              {title}
-            </h1>
-            <StudyControls
-              studyFlag={studyFlag}
-              onToggleStudyFlag={onToggleStudyFlag}
-              studyNote={studyNote}
-            />
-          </div>
-          {summary && (
-            <p className="mx-auto mt-2.5 max-w-[600px] text-sm leading-relaxed text-muted-foreground">
-              {summary}
-            </p>
+
+          {/* Topic chip — the conversation's genre */}
+          {topicLabel && (
+            <TopicChip label={topicLabel} icon={topicIcon ?? null} />
           )}
-        </div>
 
-        {/* Topic chip — the conversation's genre, right by the conversation */}
-        {topicLabel && <TopicChip label={topicLabel} icon={topicIcon ?? null} />}
-
-        {/* Conversation — chat bubbles (stays centered) */}
-        <div className="flex w-full max-w-[680px] flex-col gap-3">
-          {lines.map((line, i) => (
-            <Bubble
-              key={i}
-              line={line}
-              active={i === currentLine}
-              showJa={showJa}
-              jaText={jaForKey?.[i] ?? null}
-              jaLoading={jaLoading}
-              patternQuote={patternQuote}
-              wordNotes={inlineNotes}
-            />
-          ))}
-        </div>
-
-        {/* VI: word list floats on the right without shifting the conversation */}
-        {sideNotes && <WordList notes={sideNotes} lines={lines} />}
-      </div>
-
-      {/* Player */}
-      <div className="flex justify-center px-6 pb-6 pt-2">
-        <div className="inline-flex items-center gap-3 rounded-full border border-border bg-background px-4 py-2.5 shadow-[0_8px_28px_rgba(15,23,42,0.10)]">
-          {/* Speed segmented */}
-          <div className="inline-flex rounded-full bg-muted p-0.5">
-            {SPEEDS.map((v) => (
-              <button
-                key={v}
-                type="button"
-                onClick={() => onSpeedChange(v)}
-                className={cn(
-                  "h-8 min-w-[46px] rounded-full px-2 text-xs font-bold tabular-nums transition-colors",
-                  speed === v
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {v.toFixed(1)}×
-              </button>
+          {/* Conversation — chat bubbles (stays centered) */}
+          <div className="flex w-full max-w-[680px] flex-col gap-3">
+            {lines.map((line, i) => (
+              <Bubble
+                key={i}
+                line={line}
+                active={i === currentLine}
+                showJa={showJa}
+                jaText={jaForKey?.[i] ?? null}
+                jaLoading={jaLoading}
+                patternQuote={patternQuote}
+                wordNotes={inlineNotes}
+              />
             ))}
           </div>
-
-          <span className="h-7 w-px bg-border" />
-
-          <button
-            type="button"
-            onClick={onPrev}
-            disabled={prevDisabled}
-            aria-label="前へ"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-
-          <button
-            type="button"
-            onClick={playing ? onStop : onPlay}
-            aria-label={playing ? "停止" : "再生"}
-            className="flex h-14 w-14 items-center justify-center rounded-full bg-[color:var(--color-primary)] text-white shadow-[0_2px_8px_rgba(0,82,204,0.18)] transition-transform active:scale-95"
-          >
-            {playing ? (
-              <Square className="h-5 w-5 fill-current" />
-            ) : (
-              <Play className="ml-0.5 h-6 w-6 fill-current" />
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={onNext}
-            disabled={nextDisabled}
-            aria-label="次へ"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
-
-          <span className="h-7 w-px bg-border" />
-
-          <button
-            type="button"
-            onClick={() => setShowJa((v) => !v)}
-            aria-pressed={showJa}
-            className={cn(
-              "inline-flex h-10 items-center gap-1.5 rounded-full border px-4 text-xs font-bold transition-colors",
-              showJa
-                ? "border-[color:var(--color-primary)] bg-[var(--color-primary)]/8 text-[color:var(--color-primary)]"
-                : "border-border text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <Languages className="h-4 w-4" />
-            日本語
-          </button>
         </div>
+
+        {/* Player */}
+        <div className="flex shrink-0 justify-center px-6 pb-6 pt-2">
+          <div className="inline-flex items-center gap-3 rounded-full border border-border bg-background px-4 py-2.5 shadow-[0_8px_28px_rgba(15,23,42,0.10)]">
+            {/* Speed segmented */}
+            <div className="inline-flex rounded-full bg-muted p-0.5">
+              {SPEEDS.map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => onSpeedChange(v)}
+                  className={cn(
+                    "h-8 min-w-[46px] rounded-full px-2 text-xs font-bold tabular-nums transition-colors",
+                    speed === v
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {v.toFixed(1)}×
+                </button>
+              ))}
+            </div>
+
+            <span className="h-7 w-px bg-border" />
+
+            <button
+              type="button"
+              onClick={onPrev}
+              disabled={prevDisabled}
+              aria-label="前へ"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+
+            <button
+              type="button"
+              onClick={playing ? onStop : onPlay}
+              aria-label={playing ? "停止" : "再生"}
+              className="flex h-14 w-14 items-center justify-center rounded-full bg-[color:var(--color-primary)] text-white shadow-[0_2px_8px_rgba(0,82,204,0.18)] transition-transform active:scale-95"
+            >
+              {playing ? (
+                <Square className="h-5 w-5 fill-current" />
+              ) : (
+                <Play className="ml-0.5 h-6 w-6 fill-current" />
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={onNext}
+              disabled={nextDisabled}
+              aria-label="次へ"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+
+            <span className="h-7 w-px bg-border" />
+
+            <button
+              type="button"
+              onClick={() => setShowJa((v) => !v)}
+              aria-pressed={showJa}
+              className={cn(
+                "inline-flex h-10 items-center gap-1.5 rounded-full border px-4 text-xs font-bold transition-colors",
+                showJa
+                  ? "border-[color:var(--color-primary)] bg-[var(--color-primary)]/8 text-[color:var(--color-primary)]"
+                  : "border-border text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <Languages className="h-4 w-4" />
+              日本語
+            </button>
+          </div>
+        </div>
+
+        {/* VI: word list — full-height panel on the right, left border only */}
+        {sideNotes && <WordList notes={sideNotes} lines={lines} />}
       </div>
     </div>
   );

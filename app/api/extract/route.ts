@@ -377,15 +377,15 @@ Conversation / example rules (重要・新):
 - For "words" entries, "example" is also an A/B/A 3-turn dialogue (same shape as grammar/expressions). The target word must appear in the dialogue. Still bounded by KNOWN_VOCAB.
 - 極端なスラングは避けるが、語彙は南部 (Saigon) 方言を既定とする（上の DIALECT ルール参照）。
 
-★REGISTER (重要) — 自然でフランクな日常会話にする★
-- ホーチミンの日常（カフェ、市場、屋台、同僚、ご近所、バイク）で実際に交わされる、生きたカジュアルな会話にする。教科書的・直訳的な堅い言い回しは避ける。
-- 一人称 "tôi" は日常会話ではほぼ使わない。代名詞は相手との関係で選ぶ:
-  - 同年代・友人: 自分も相手も mình（または名前）。砕けた間柄なら tao/mày もあるが A1 では避ける。
+★REGISTER (最重要) — 友人同士のフランクな日常会話にする★
+- 会話の話者 A・B は基本的に「友人・同年代の知り合い」という前提。ホーチミンの日常（カフェ、市場、屋台、同僚、ご近所、バイク）で実際に交わされる、生きたカジュアルな会話にする。教科書的・直訳的・フォーマルな言い回しは禁止。
+- ★一人称 "tôi" は絶対に使わない★ — "tôi" は事務的・フォーマルすぎて友人同士の会話では不自然。例文・対話・word_notes のどこにも tôi を出さないこと。
+  - 友人・同年代どうし: 自分も相手も "mình"（または名前）を使う。
   - 相手が年上: 自分=em、相手=anh（男）/ chị（女）。
   - 相手が年下: 自分=anh/chị、相手=em。
-  "tôi" を使うのは初対面の事務的な場面や書き言葉だけ。日常対話では使わない。
-- "bạn" も会話では教科書的。呼びかけは anh/chị/em や名前を優先する。
+- "bạn" も呼びかけとしては教科書的。anh/chị/em や名前、mình を優先する。
 - 文末詞（nha / nghen / hen / á / ạ など南部のもの）を自然に付けて、生っぽさを出す。
+- 直訳的な堅い表現より、ベトナム人が実際に口にするくだけた言い回しを選ぶ。
 
 General rules:
 - A1 ONLY. If an input item is above A1, still classify it but mark frequency=1; do not silently drop user-requested items unless they duplicate EXISTING_ITEMS.
