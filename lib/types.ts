@@ -185,6 +185,7 @@ export interface ExtractedExpression {
   word_notes?: WordNote[];
   nuance?: string;
   topic?: ItemTopic;
+  pattern_quote?: string;
 }
 
 export interface ExtractedWord {

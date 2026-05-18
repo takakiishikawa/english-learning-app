@@ -13,10 +13,8 @@ import { toast } from "@takaki/go-design-system";
 
 const DEFAULTS = {
   baseline_repeating: 500,
-  baseline_speaking: 20,
-  baseline_nativecamp: 250,
   baseline_shadowing: 75,
-  speaking_test_day: 1,
+  ef_set_interval_months: 3,
 };
 
 type SettingsValues = typeof DEFAULTS;
@@ -41,14 +39,10 @@ export default function SettingsRoute() {
         setValues({
           baseline_repeating:
             data.baseline_repeating ?? DEFAULTS.baseline_repeating,
-          baseline_speaking:
-            data.baseline_speaking ?? DEFAULTS.baseline_speaking,
-          baseline_nativecamp:
-            data.baseline_nativecamp ?? DEFAULTS.baseline_nativecamp,
           baseline_shadowing:
             data.baseline_shadowing ?? DEFAULTS.baseline_shadowing,
-          speaking_test_day:
-            data.speaking_test_day ?? DEFAULTS.speaking_test_day,
+          ef_set_interval_months:
+            data.ef_set_interval_months ?? DEFAULTS.ef_set_interval_months,
         });
       }
     }
@@ -100,7 +94,7 @@ export default function SettingsRoute() {
           onChange={set(fieldKey)}
           className="w-24 text-right"
         />
-        <span className="text-sm text-muted-foreground w-12 shrink-0">
+        <span className="text-sm text-muted-foreground w-24 shrink-0 whitespace-nowrap">
           {unit}
         </span>
       </div>
@@ -120,26 +114,20 @@ export default function SettingsRoute() {
           control={<NumberInput fieldKey="baseline_repeating" unit="回/週" />}
         />
         <SettingsItem
-          label="スピーキング"
-          control={<NumberInput fieldKey="baseline_speaking" unit="回/週" />}
-        />
-        <SettingsItem
-          label="英会話レッスン"
-          control={<NumberInput fieldKey="baseline_nativecamp" unit="分/週" />}
-        />
-        <SettingsItem
           label="シャドーイング"
           control={<NumberInput fieldKey="baseline_shadowing" unit="分/週" />}
         />
       </SettingsGroup>
 
       <SettingsGroup
-        title="NC AI Speaking Test"
-        description="毎月何日に受けますか？"
+        title="EF SET"
+        description="EF SET を何ヶ月に1回受けるかを設定します。前回の受検から指定した期間が過ぎると、トップページに受検バナーが表示されます。"
       >
         <SettingsItem
-          label="受検日"
-          control={<NumberInput fieldKey="speaking_test_day" unit="日" />}
+          label="受検間隔"
+          control={
+            <NumberInput fieldKey="ef_set_interval_months" unit="ヶ月に1回" />
+          }
         />
       </SettingsGroup>
 

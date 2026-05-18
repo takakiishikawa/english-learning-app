@@ -334,7 +334,6 @@ export default function WordRepeatingPage() {
       <RepeatingSession
         language={language}
         kindLabel="単語"
-        eyebrow="単語"
         title={current.word}
         studyFlag={current.study_flag}
         onToggleStudyFlag={() => handleToggleStudyFlag(current)}

@@ -347,7 +347,6 @@ export default function GrammarRepeatingPage() {
       <RepeatingSession
         language={language}
         kindLabel="文法"
-        eyebrow="文法"
         title={current.name}
         studyFlag={current.study_flag}
         onToggleStudyFlag={() => handleToggleStudyFlag(current)}

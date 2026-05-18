@@ -41,9 +41,10 @@ const LOADING_STEPS = [
   "整形中...",
 ];
 
-const PLACEHOLDER = `Preplyレッスンの宿題やテキストをそのまま貼り付けてください。
-タイトル（例: TRIAL LESSON - HOMEWORK）も含めて構いません。
-AIが文法・フレーズ・単語に仕分けて、単語ごとの解説とニュアンスを付けます。`;
+const PLACEHOLDER = `学習したいテキストをそのまま貼り付けてください。
+レッスンの宿題・教材・例文など、何でも OK です。
+
+AI が内容を文法・フレーズ・単語に仕分けし、それぞれに練習用の会話例と解説を付けて生成します。`;
 
 function PriorityStar({
   active,
@@ -266,9 +267,9 @@ export function ViAddModal({
     >
       <DialogContent className="max-w-5xl flex flex-col max-h-[88vh] gap-0 p-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
-          <DialogTitle>文法・フレーズ・単語を追加</DialogTitle>
+          <DialogTitle>テキストから練習コンテンツを生成</DialogTitle>
           <DialogDescription>
-            Preplyレッスンのテキストを貼り付け → AIが3カテゴリに仕分け → 確認画面で不要な行を削除して一括追加。星マークで強化フラグを付けると練習サイクルで優先的に出ます。
+            学習したいテキストを貼り付けると、AI がオリジナルの練習用コンテンツ（文法・フレーズ・単語と会話例）を生成します。確認画面で不要な行を削除し、まとめてライブラリに追加できます。
           </DialogDescription>
         </DialogHeader>
 
@@ -317,7 +318,7 @@ export function ViAddModal({
                   id="vi-add-source-title"
                   value={sourceTitle}
                   onChange={(ev) => setSourceTitle(ev.target.value)}
-                  placeholder="例: TRIAL LESSON - HOMEWORK"
+                  placeholder="例: Lesson 3 / 旅行の英会話"
                   className="text-sm"
                 />
                 <p className="text-xs text-muted-foreground">

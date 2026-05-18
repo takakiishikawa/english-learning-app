@@ -179,7 +179,7 @@ function TopicChip({ label, icon }: { label: string; icon: string | null }) {
   );
 }
 
-// ─── Study controls — flag toggle + memo (hover) ────────────────────
+// ─── Study controls — flag toggle (+ tooltip) + memo (hover) ────────
 function StudyControls({
   studyFlag,
   onToggleStudyFlag,
@@ -191,20 +191,26 @@ function StudyControls({
 }) {
   return (
     <span className="inline-flex items-center gap-1.5">
-      <button
-        type="button"
-        onClick={onToggleStudyFlag}
-        title={studyFlag ? "学習したいリストから外す" : "学習したいリストに追加"}
-        aria-pressed={studyFlag}
-        className={cn(
-          "flex h-8 w-8 items-center justify-center rounded-full border transition-colors",
-          studyFlag
-            ? "border-[color:var(--color-primary)] bg-[var(--color-primary)]/10 text-[color:var(--color-primary)]"
-            : "border-border text-muted-foreground hover:text-foreground",
-        )}
-      >
-        <Flag className={cn("h-4 w-4", studyFlag && "fill-current")} />
-      </button>
+      <span className="group relative inline-flex">
+        <button
+          type="button"
+          onClick={onToggleStudyFlag}
+          aria-pressed={studyFlag}
+          className={cn(
+            "flex h-8 w-8 items-center justify-center rounded-full border transition-colors",
+            studyFlag
+              ? "border-[color:var(--color-primary)] bg-[var(--color-primary)]/10 text-[color:var(--color-primary)]"
+              : "border-border text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <Flag className={cn("h-4 w-4", studyFlag && "fill-current")} />
+        </button>
+        <span className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 hidden w-60 -translate-x-1/2 rounded-lg border border-border bg-background px-3 py-2 text-center text-xs leading-relaxed text-muted-foreground shadow-lg group-hover:block">
+          {studyFlag
+            ? "「学習したい」リストに登録済み。クリックで解除します。"
+            : "外部で学習したい文法・フレーズの目印。ライブラリの「学習したい」リストに表示されます。"}
+        </span>
+      </span>
       {studyNote && (
         <span className="group relative flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground">
           <MessageSquareText className="h-4 w-4" />
@@ -293,15 +299,24 @@ function buildSegments(
 
 function HighlightedLine({
   text,
+  isA,
   patternQuote,
   wordNotes,
 }: {
   text: string;
+  isA: boolean;
   patternQuote?: string | null;
   wordNotes?: WordNote[] | null;
 }) {
   const segs = buildSegments(text, patternQuote, wordNotes);
   const hasWise = segs.some((s) => s.kind === "wise");
+  // 話者に合わせてハイライト色を変える（A=青 / B=オレンジ）
+  const patternCls = isA
+    ? "bg-[var(--color-primary)]/15 text-[color:var(--color-primary)]"
+    : "bg-[var(--color-warning)]/20 text-[color:var(--color-warning)]";
+  const wiseUnderline = isA
+    ? "border-[color:var(--color-primary)]/40"
+    : "border-[color:var(--color-warning)]/50";
   return (
     <span className={hasWise ? "leading-[2.15]" : "leading-relaxed"}>
       {segs.map((s, i) => {
@@ -310,7 +325,7 @@ function HighlightedLine({
           return (
             <span
               key={i}
-              className="rounded bg-[var(--color-primary)]/15 px-0.5 font-semibold text-[color:var(--color-primary)]"
+              className={cn("rounded px-0.5 font-semibold", patternCls)}
             >
               {s.text}
             </span>
@@ -323,7 +338,7 @@ function HighlightedLine({
             <span className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 text-[13.5px] font-medium leading-none text-muted-foreground">
               {s.note}
             </span>
-            <span className="border-b border-dotted border-[color:var(--color-primary)]/40">
+            <span className={cn("border-b border-dotted", wiseUnderline)}>
               {s.text}
             </span>
           </span>
@@ -390,6 +405,7 @@ function Bubble({
       >
         <HighlightedLine
           text={text}
+          isA={isA}
           patternQuote={patternQuote}
           wordNotes={wordNotes}
         />
@@ -403,32 +419,55 @@ function Bubble({
   );
 }
 
-// ─── Word list (VI — floats to the right of the conversation) ───────
-function WordList({ notes }: { notes: WordNote[] }) {
+// ─── Word list (VI — floats right, grouped by conversation line) ────
+function WordList({ notes, lines }: { notes: WordNote[]; lines: string[] }) {
+  const lineTexts = lines.map(stripSpeaker);
+  const lineOf = (word: string): number => {
+    for (let i = 0; i < lineTexts.length; i++) {
+      if (findToken(lineTexts[i], word) >= 0) return i;
+    }
+    return -1;
+  };
+  // 会話行ごとにグループ化（どの行にも無い語は「その他」）
+  const byLine = new Map<number, WordNote[]>();
+  for (const n of notes) {
+    const key = lineOf(n.word);
+    if (!byLine.has(key)) byLine.set(key, []);
+    byLine.get(key)!.push(n);
+  }
+  const keys = [...byLine.keys()].filter((k) => k >= 0).sort((a, b) => a - b);
+  if (byLine.has(-1)) keys.push(-1);
+
   return (
-    <aside className="absolute right-6 top-1/2 max-h-[78%] w-[228px] -translate-y-1/2 overflow-y-auto rounded-2xl border border-border bg-card p-4 shadow-[0_6px_24px_rgba(15,23,42,0.07)]">
+    <aside className="absolute right-6 top-1/2 max-h-[88%] w-[240px] -translate-y-1/2 overflow-y-auto rounded-2xl border border-border bg-card p-4 shadow-[0_6px_24px_rgba(15,23,42,0.07)]">
       <div className="mb-3 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
         <BookOpen className="h-3.5 w-3.5" />
         単語
       </div>
-      <ul className="flex flex-col">
-        {notes.map((n, i) => (
-          <li
-            key={i}
-            className={cn(
-              "py-2",
-              i > 0 && "border-t border-border/50",
-            )}
-          >
-            <div className="text-[15px] font-semibold leading-tight text-foreground">
-              {n.word}
+      <div className="flex flex-col gap-3.5">
+        {keys.map((key) => (
+          <div key={key}>
+            <div className="mb-1.5 inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-muted-foreground">
+              {key >= 0 ? `${key + 1}つ目の会話` : "その他"}
             </div>
-            <div className="mt-1 text-[13px] leading-snug text-muted-foreground">
-              {n.note}
-            </div>
-          </li>
+            <ul className="flex flex-col">
+              {byLine.get(key)!.map((n, i) => (
+                <li
+                  key={i}
+                  className={cn("py-1.5", i > 0 && "border-t border-border/50")}
+                >
+                  <div className="text-[15px] font-semibold leading-tight text-foreground">
+                    {n.word}
+                  </div>
+                  <div className="mt-1 text-[13px] leading-snug text-muted-foreground">
+                    {n.note}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
         ))}
-      </ul>
+      </div>
     </aside>
   );
 }
@@ -436,7 +475,6 @@ function WordList({ notes }: { notes: WordNote[] }) {
 export type RepeatingSessionProps = {
   language: Language;
   kindLabel: string;
-  eyebrow: string;
   title: string;
   summary?: string | null;
   importance: number;
@@ -467,7 +505,6 @@ export type RepeatingSessionProps = {
 export function RepeatingSession({
   language,
   kindLabel,
-  eyebrow,
   title,
   summary,
   importance,
@@ -587,16 +624,15 @@ export function RepeatingSession({
 
       {/* Stage — vertically centered, compact */}
       <div className="relative flex flex-1 flex-col items-center justify-center gap-6 overflow-y-auto px-6 py-4">
-        {/* Pattern block — plain, no border */}
+        {/* Pattern block — plain, no border. Stars sit above the title. */}
         <div className="max-w-[680px] text-center">
-          <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-            {eyebrow}
+          <div className="mb-2 flex justify-center">
+            <Stars value={importance} />
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2.5">
             <h1 className="text-[28px] font-bold leading-tight tracking-tight text-foreground">
               {title}
             </h1>
-            <Stars value={importance} />
             <StudyControls
               studyFlag={studyFlag}
               onToggleStudyFlag={onToggleStudyFlag}
@@ -630,7 +666,7 @@ export function RepeatingSession({
         </div>
 
         {/* VI: word list floats on the right without shifting the conversation */}
-        {sideNotes && <WordList notes={sideNotes} />}
+        {sideNotes && <WordList notes={sideNotes} lines={lines} />}
       </div>
 
       {/* Player */}

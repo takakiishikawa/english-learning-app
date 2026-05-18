@@ -6,7 +6,7 @@ import {
   type HeatmapCell,
 } from "@/components/activity-heatmap";
 import { StreakPopup } from "@/components/streak-popup";
-import { ChevronRight, Repeat2, Play } from "lucide-react";
+import { ChevronRight, Repeat2, Play, GraduationCap } from "lucide-react";
 
 // ─── CTACard（今日の練習に進むカード） ─────────────────────────────────────
 
@@ -57,8 +57,8 @@ function MetricCard({
     weekDiff == null || weekDiff === 0
       ? "text-muted-foreground"
       : weekDiff > 0
-        ? "text-[#4d6b3a] dark:text-[#8fb574]"
-        : "text-[#9a3a2a] dark:text-[#d98a78]";
+        ? "text-[color:var(--color-success)]"
+        : "text-destructive";
 
   return (
     <div className="rounded-xl border border-[var(--color-border-default)] bg-card p-4">
@@ -167,8 +167,13 @@ export default async function HomePage() {
   const rangeStartStr = toStr(addDays(todayUTC, -6));
   const prev7StartStr = toStr(addDays(todayUTC, -13));
 
-  const [allDatesResult, rangeLogsResult, youtubeLogsResult, settingsResult] =
-    await Promise.all([
+  const [
+    allDatesResult,
+    rangeLogsResult,
+    youtubeLogsResult,
+    settingsResult,
+    efSetResult,
+  ] = await Promise.all([
       supabase
         .from("practice_logs")
         .select("practiced_at")
@@ -192,6 +197,11 @@ export default async function HomePage() {
         )
         .lte("completed_at", new Date(todayStr + "T23:59:59").toISOString()),
       supabase.from("user_settings").select("*").maybeSingle(),
+      supabase
+        .from("ef_set_scores")
+        .select("tested_at")
+        .order("tested_at", { ascending: false })
+        .limit(1),
     ]);
 
   type RangeLog = {
@@ -272,6 +282,18 @@ export default async function HomePage() {
   const settings = settingsResult.data ?? null;
   const isEn = currentLanguage === "en";
 
+  // ── EF SET 受検バナー ──
+  const efSetIntervalMonths = settings?.ef_set_interval_months ?? 3;
+  const latestEfSet =
+    (efSetResult.data as { tested_at: string }[] | null)?.[0]?.tested_at ??
+    null;
+  let efSetDue = true;
+  if (latestEfSet) {
+    const [ey, em, ed] = latestEfSet.split("-").map(Number);
+    const dueDate = new Date(ey, em - 1 + efSetIntervalMonths, ed);
+    efSetDue = now >= dueDate;
+  }
+
   // ── 12週間ヒートマップ ──
   const countByDate = new Map<string, number>();
   for (const l of rangeLogs) {
@@ -318,6 +340,26 @@ export default async function HomePage() {
       </header>
 
       <div className="space-y-4">
+        {/* EF SET 受検アナウンス */}
+        {efSetDue && (
+          <Link
+            href="/report"
+            className="group flex items-center gap-3 rounded-xl border border-[color:var(--color-primary)]/30 bg-[var(--color-primary)]/10 px-4 py-3 transition-colors hover:bg-[var(--color-primary)]/15"
+          >
+            <GraduationCap className="h-5 w-5 shrink-0 text-[color:var(--color-primary)]" />
+            <div className="min-w-0 flex-1 text-[13px]">
+              <span className="font-semibold text-foreground">
+                EF SET の受検時期です
+              </span>
+              <span className="text-muted-foreground">
+                {" — "}
+                {efSetIntervalMonths}ヶ月ごとの英語力チェック。レポートからスコアを記録すると非表示になります。
+              </span>
+            </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+          </Link>
+        )}
+
         {/* 練習への導線 */}
         <div className="grid gap-4 sm:grid-cols-2">
           <CTACard
@@ -337,14 +379,14 @@ export default async function HomePage() {
         {/* 今週の数字 */}
         <div className="grid gap-4 sm:grid-cols-2">
           <MetricCard
-            label="今週のリピーティング"
+            label="リピーティング（直近7日間）"
             value={weeklyRepeating}
             unit="回"
             ratio={ratioOf(weeklyRepeating, settings?.baseline_repeating)}
             weekDiff={repeatingDiff}
           />
           <MetricCard
-            label="今週のシャドーイング"
+            label="シャドーイング（直近7日間）"
             value={weeklyShadowing}
             unit="分"
             ratio={ratioOf(weeklyShadowing, settings?.baseline_shadowing)}

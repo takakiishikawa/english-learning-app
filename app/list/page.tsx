@@ -962,12 +962,14 @@ export default function ListPage() {
         .select("id", { count: "exact", head: true })
         .eq("language", language)
         .eq("study_flag", true);
+    // 練習完了（play_count >= 10）の項目はリピート対象外なので判定不要
     const missingPatternQuery = (table: string) =>
       supabase
         .from(table)
         .select("id", { count: "exact", head: true })
         .eq("language", language)
-        .is("pattern_quote", null);
+        .is("pattern_quote", null)
+        .lt("play_count", 10);
     Promise.all([
       supabase
         .from("grammar")
@@ -1005,12 +1007,14 @@ export default function ListPage() {
           .select("id")
           .eq("language", language)
           .is("pattern_quote", null)
+          .lt("play_count", 10)
           .limit(30),
         supabase
           .from("expressions")
           .select("id")
           .eq("language", language)
           .is("pattern_quote", null)
+          .lt("play_count", 10)
           .limit(30),
       ]);
       type Task = { kind: "grammar" | "expression"; id: string };
@@ -1063,24 +1067,26 @@ export default function ListPage() {
         title="ライブラリ"
         actions={
           <div className="flex items-center gap-2">
-            {patternBusy ? (
+            {patternBusy && (
               <span className="text-sm text-muted-foreground tabular-nums">
                 パターン判定中 {patternProgress.done} / {patternProgress.total}
               </span>
-            ) : (
+            )}
+            {!patternBusy && !!patternMissing && (
               <Button
                 variant="outline"
                 onClick={handleDetectPatterns}
-                disabled={!patternMissing}
                 title="会話内の文法・フレーズの該当箇所を AI で判定（30件ずつ）"
               >
                 <Sparkles className="mr-1.5 h-4 w-4" />
-                パターン判定
-                {patternMissing ? `（残り${patternMissing}）` : ""}
+                パターン判定（残り{patternMissing}）
               </Button>
             )}
             {isVi && (
-              <Button onClick={() => setShowAddModal(true)} disabled={patternBusy}>
+              <Button
+                onClick={() => setShowAddModal(true)}
+                disabled={patternBusy}
+              >
                 <Plus className="mr-1.5 h-4 w-4" />
                 追加
               </Button>

@@ -474,6 +474,7 @@ export async function saveExpressions(
     frequency: number;
     word_notes?: WordNote[] | null;
     nuance?: string | null;
+    pattern_quote?: string | null;
     is_priority?: boolean;
     source_title?: string | null;
     topic?: ItemTopic | null;
@@ -499,6 +500,7 @@ export async function saveExpressions(
     source_title: e.source_title ?? null,
     topic_label: e.topic?.label ?? null,
     topic_icon: e.topic?.icon ?? null,
+    pattern_quote: e.pattern_quote ?? null,
   }));
 
   const { error } = await supabase.from("expressions").insert(rows);

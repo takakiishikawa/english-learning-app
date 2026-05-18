@@ -142,6 +142,11 @@ const EXTRACT_INPUT_SCHEMA = {
           },
           word_notes: WORD_NOTES_SCHEMA,
           topic: TOPIC_SCHEMA,
+          pattern_quote: {
+            type: "string" as const,
+            description:
+              "The exact contiguous substring, copied verbatim from one of the conversation lines, where this expression is actually used (it may be inflected or slightly varied). MUST be an exact substring of a line so the UI can highlight it.",
+          },
           nuance: {
             type: ["string", "null"] as const,
             description:
@@ -156,6 +161,7 @@ const EXTRACT_INPUT_SCHEMA = {
           "usage_scene",
           "frequency",
           "topic",
+          "pattern_quote",
         ],
       },
     },
@@ -251,8 +257,8 @@ TOPIC (each item — required):
 - topic.label: a short English label, 1-2 words (例: "Cooking", "Product work", "Dating", "Café", "Reading", "Money", "Fitness", "Pets"). English only.
 - topic.icon: pick the single best-matching icon name from this fixed list — [chef-hat, briefcase, plane, heart, book-open, coffee, shopping-bag, home, dumbbell, code, cat, dog, bike, utensils, music, users, map-pin, wallet, shirt, brain, sparkles, message-circle]. Use "message-circle" only when nothing else fits.
 
-GRAMMAR PATTERN HIGHLIGHT (grammar items — required):
-- pattern_quote: copy verbatim the exact run of words FROM one of the examples lines that is the concrete instance of this grammar pattern. It MUST be an exact substring of a line (so the UI can highlight it).
+PATTERN HIGHLIGHT (grammar & expression items — required):
+- pattern_quote: copy verbatim the exact run of words FROM one dialogue line where the pattern/expression actually occurs (grammar → examples, expression → conversation). It MUST be an exact substring of a line so the UI can highlight it. The expression may be inflected or slightly varied in the dialogue — quote it exactly as it appears there.
 - Return ONLY valid JSON, no markdown, no explanation`;
 
 const SYSTEM_PROMPT_VI = `You are a Vietnamese language tutor for an absolute beginner (CEFR A1).
@@ -393,8 +399,8 @@ TOPIC (each item — required):
 - topic.label: a short English label, 1-2 words (例: "Cooking", "Market", "Coffee", "Family", "Shopping", "Directions", "Greetings"). English only — even though the dialogue itself is Vietnamese.
 - topic.icon: pick the single best-matching icon name from this fixed list — [chef-hat, briefcase, plane, heart, book-open, coffee, shopping-bag, home, dumbbell, code, cat, dog, bike, utensils, music, users, map-pin, wallet, shirt, brain, sparkles, message-circle]. Use "message-circle" only when nothing else fits.
 
-GRAMMAR PATTERN HIGHLIGHT (grammar items — required):
-- pattern_quote: copy verbatim the exact run of words FROM one of the examples lines that is the concrete instance of this grammar pattern. It MUST be an exact substring of a line (so the UI can highlight it).
+PATTERN HIGHLIGHT (grammar & expression items — required):
+- pattern_quote: copy verbatim the exact run of words FROM one dialogue line where the pattern/expression actually occurs (grammar → examples, expression → conversation). It MUST be an exact substring of a line so the UI can highlight it. The expression may be inflected or slightly varied in the dialogue — quote it exactly as it appears there.
 - Return ONLY valid JSON, no markdown, no explanation.`;
 
 const CORE_VI_VOCAB = [

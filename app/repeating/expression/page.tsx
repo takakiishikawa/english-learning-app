@@ -345,7 +345,6 @@ export default function ExpressionRepeatingPage() {
       <RepeatingSession
         language={language}
         kindLabel="フレーズ"
-        eyebrow="フレーズ"
         title={current.expression}
         studyFlag={current.study_flag}
         onToggleStudyFlag={() => handleToggleStudyFlag(current)}
